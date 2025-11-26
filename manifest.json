@@ -1,0 +1,9 @@
+{
+    "name": "YourAppName",
+    "short_name": "YourAppName",
+    "theme_color": "#ff5754",
+    "background_color": "#ffffff",
+    "display": "standalone",
+    "scope": "/",
+    "start_url": "https://test-lemon-nu-30.vercel.app/"
+}
