@@ -258,272 +258,205 @@
 </div>
 
 <script>
-    /* --- CONFIG --- */
+    /* --- НАСТРОЙКИ --- */
     const MAIN_LINK = "https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o";
     const WA_LINK = "https://whatsapp.com/channel/0029Vb6IjfI4tRrn1IzWzP16/298";
-    const DOWNLOAD_LINK = "1win.apk"; 
-    
-    // ... (Остальные константы остаются без изменений) ...
-    const CURRENCY_RATES = {
-        'USD': 1, 'EUR': 0.95, 'BDT': 110, 'NGN': 750, 'KES': 145, 
-        'ZAR': 18, 'GHS': 12, 'XAF': 600, 'XOF': 600, 'RWF': 1300, 
-        'BRL': 5, 'RUB': 90, 'DEFAULT': 100 
-    };
+    const DOWNLOAD_LINK = "KofiGames.apk"; 
 
-    const COUNTRY_NAMES = {
-        'NGN': ["Chukwudi O.", "Aisha K.", "Tunde M.", "Ngozi E.", "Dapo A.", "Ifeoma I.", "Bayo P."],
-        'KES': ["Juma S.", "Faith M.", "Musa O.", "Asha D.", "Karanja E.", "Zainab T."],
-        'GHS': ["Adwoa P.", "Kwame B.", "Esi V.", "Kofi O.", "Akua H.", "Papa N."],
-        'XOF': ["Moussa D.", "Fatima S.", "Aliou B.", "Mariam A.", "Amadou F.", "Ndèye C."],
-        'XAF': ["Patrice N.", "Binta E.", "Hassan J.", "Celine K.", "Blaise M.", "Jean M."],
-        'RWF': ["Uwase C.", "Olivier R.", "Divine K.", "Innocent T.", "Sandrine I.", "Eric G."],
-        'ZAR': ["Sipho K.", "Lerato M.", "Bongani Z.", "Zinhle N.", "Thabo R.", "Nandi T."],
-        'BDT': ["Rahim K.", "Sumon A.", "Fatima B.", "Omar H.", "Priya C.", "Akash V.", "Nusrat F."],
-        'BRL': ["Pedro S.", "Juliana M.", "Rafael F.", "Isabella P.", "Lucas V.", "Mariana T.", "Gabriel D."],
-        'EUR': ["Hans G.", "Eva L.", "Marcus R.", "Sofia N.", "Alex K.", "Thomas B.", "Mia V."],
-    };
-    
-    const RESTRICTED_ZONES = [
-        "America/", "US", "Europe/Madrid", "Europe/Vilnius", "Europe/Berlin", 
-        "Asia/Almaty", "Asia/Shanghai", "Asia/Chongqing", "Europe/Zurich", 
-        "Europe/London", "Europe/Malta", "Europe/Copenhagen", "Europe/Stockholm", 
-        "Europe/Belgrade", "Europe/Paris", "Europe/Amsterdam", "America/Port_of_Spain", 
-        "Asia/Kuwait", "Europe/Lisbon", "Asia/Nicosia" 
-    ];
+    // !!! ВАЖНО: Ваш Pushy App ID !!!
+    const PUSHY_APP_ID = "6927606ab7e2f9df7184b786"; 
 
-    // BOT_UAS удален, так как он больше не используется.
-    
-    /* --- UTILS --- */
-    function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-    function formatNumber(num) { return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
-    function getCurrencyRate(currency) {
-        return CURRENCY_RATES[currency] || CURRENCY_RATES['DEFAULT'];
+    /* --- ДЕТЕКТОР БРАУЗЕРА В ПРИЛОЖЕНИИ (In-App Browser) --- */
+    function detectInAppBrowser() {
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        const markers = ['FBAN', 'FBAV', 'Instagram', 'TikTok', 'BytedanceWebview', 'wv'];
+        return markers.some(marker => ua.indexOf(marker) > -1);
+    }
+
+    /* --- PUSHY.ME: НЕМЕДЛЕННАЯ РЕГИСТРАЦИЯ И СЛУШАТЕЛИ --- */
+    function initPushyRegistration() {
+        // Проверяем, что Pushy SDK загружен
+        if (typeof Pushy === 'undefined') {
+            console.error("Pushy SDK не загружен. Не могу начать регистрацию.");
+            return;
+        }
+
+        // 1. РЕГИСТРАЦИЯ БРАУЗЕРА (Вызывается сразу)
+        Pushy.register({ appId: PUSHY_APP_ID }).then(function (deviceToken) {
+            console.log('✅ Pushy device token:', deviceToken);
+            // alert('Pushy token received!'); // Отключено для чистого UX
+            
+            // 2. УСТАНОВКА ОБРАБОТЧИКА ВХОДЯЩИХ УВЕДОМЛЕНИЙ (пока страница открыта)
+            Pushy.setNotificationListener(function (data) {
+                console.log('Received notification: ' + JSON.stringify(data));
+                let message = data.message || 'Новое уведомление';
+                alert('Получено уведомление: ' + message);
+            });
+            
+            // 3. ПОДПИСКА НА ТЕМУ (Опционально)
+            if (Pushy.isRegistered()) {
+                Pushy.subscribe('news').then(() => {
+                    console.log('Подписка на тему "news" успешна.');
+                }).catch(function (err) {
+                    console.error('Subscribe failed:', err.message);
+                });
+            }
+
+        }).catch(function (err) {
+            console.error('❌ Pushy registration failed:', err);
+            // alert('Регистрация уведомлений не удалась: ' + err.message); // Отключено, чтобы не пугать пользователя
+        });
     }
 
 
-    /* --- LOGIC: LOCATION --- */
-
-    // Функция checkBotUA() была удалена.
-
-    function getCurrencyAndLocale() {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const lang = navigator.language || navigator.userLanguage;
-        let currency = "USD"; 
-        if (tz.includes("Africa/Lagos")) currency = "NGN";
-        else if (tz.includes("Africa/Nairobi")) currency = "KES";
-        else if (tz.includes("Africa/Accra")) currency = "GHS";
-        else if (tz.includes("Africa/Johannesburg")) currency = "ZAR";
-        else if (tz.includes("Africa/Douala") || tz.includes("Africa/Libreville")) currency = "XAF";
-        else if (tz.includes("Africa/Abidjan") || tz.includes("Africa/Dakar")) currency = "XOF";
-        else if (tz.includes("Africa/Kigali")) currency = "RWF";
-        else if (tz.includes("Europe/")) currency = "EUR";
-        else if (tz.includes("Asia/Dhaka")) currency = "BDT";
-        else if (tz.includes("America/Sao_Paulo")) currency = "BRL";
-        else if (lang.includes("ru")) currency = "RUB";
-        return { currency, tz, lang };
-    }
-    function checkRestricted(tz) {
-        return RESTRICTED_ZONES.some(zone => tz.includes(zone));
-    }
-    function activateCTA() {
-        const cta = document.getElementById('cta-link');
-        const sticky = document.getElementById('sticky-link');
-        
-        if (!cta.classList.contains('restricted')) {
-            cta.href = MAIN_LINK;
-            sticky.href = MAIN_LINK;
-            cta.classList.remove('disabled');
-            sticky.classList.remove('disabled');
-            cta.style.animation = 'pulse 2s infinite';
-            cta.style.boxShadow = '0 4px 25px rgba(46, 204, 113, 0.3)';
+    /* --- БЕЗОПАСНАЯ ЗАГРУЗКА PUSHY SDK и ЗАПУСК РЕГИСТРАЦИИ --- */
+    function safeInitPushy() {
+        if (typeof Pushy !== 'undefined') {
+            console.log('Pushy SDK готов. Запуск немедленной регистрации.');
+            initPushyRegistration(); // Вызываем регистрацию сразу
+        } else {
+            // Ждем загрузки скрипта (до 500 мс)
+            let tries = 0;
+            const check = setInterval(() => {
+                if (typeof Pushy !== 'undefined' || tries > 10) {
+                    clearInterval(check);
+                    if (typeof Pushy !== 'undefined') {
+                        console.log('Pushy SDK успешно загружен. Запуск немедленной регистрации.');
+                        initPushyRegistration(); // Вызываем регистрацию сразу
+                    } else {
+                        console.error('Pushy SDK не загружен. Регистрация невозможна.');
+                    }
+                }
+                tries++;
+            }, 50);
         }
     }
 
-    /* --- INIT & HANDLERS --- */
     document.addEventListener("DOMContentLoaded", function() {
-        // 1. Bot check был здесь. Теперь его нет.
-        
-        const { currency, tz, lang } = getCurrencyAndLocale();
-        const isRestricted = checkRestricted(tz);
-        
-        const cta = document.getElementById('cta-link');
-        const sticky = document.getElementById('sticky-link');
-        
-        // 2. Setup initial CTA state 
-        cta.href = "#";
-        sticky.href = "#"; 
-        cta.classList.add('disabled');
-        sticky.classList.add('disabled');
-        
-        setupButtons(isRestricted);
-
-        // 4. Localization and content load
-        localize(lang, currency);
-
-        // 5. Start timer and display app
-        document.getElementById('main-app').style.display = 'block';
-        document.getElementById('sticky-foot').style.display = 'flex';
-        startTimer(300, document.querySelector('#timer'));
+        localize(); 
+        if (detectInAppBrowser()) {
+            document.getElementById('webview-guide').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('sticky-foot').style.display = 'none';
+        } else {
+            document.getElementById('main-app').style.display = 'block';
+            document.getElementById('sticky-foot').style.display = 'flex';
+            initApp();
+            
+            // !!! ЗАПУСКАЕМ НЕЗАВИСИМУЮ РЕГИСТРАЦИЮ СРАЗУ !!!
+            safeInitPushy(); 
+        }
     });
-
-    function handleVpnButtonClick() {
-        document.getElementById('vpn-modal').style.display = 'none';
-        window.location.href = MAIN_LINK; 
-    }
-
-    function setupButtons(isRestricted) {
-        const cta = document.getElementById('cta-link');
-        const sticky = document.getElementById('sticky-link');
-        const vpnCloseBtn = document.getElementById('vpn-close-btn');
-
-        vpnCloseBtn.onclick = handleVpnButtonClick;
-        document.getElementById('wa-link').href = WA_LINK;
-
-        if (isRestricted) {
-            const txt = content[navigator.language.slice(0, 2)] || content['en'];
-            
-            const vpnAction = (e) => {
-                e.preventDefault();
-                document.getElementById('vpn-modal').style.display = 'flex';
-            };
-            
-            cta.classList.add('restricted');
-            cta.classList.remove('disabled'); 
-            cta.querySelector('#btn-txt').textContent = txt.vpn_cta; 
-            cta.onclick = vpnAction;
-            cta.href = "#";
-
-            sticky.style.background = "#e74c3c"; 
-            sticky.textContent = txt.vpn_cta; 
-            sticky.onclick = vpnAction;
-            sticky.href = "#";
-            sticky.classList.remove('disabled');
-            
-        } 
-    }
 
     function startDownload(e) {
         e.preventDefault(); 
         const btn = document.getElementById('dl-link');
         const txt = document.getElementById('dl-text');
         btn.classList.add('loading');
-        txt.innerHTML = "⏳ ...";
-        setTimeout(() => { txt.innerHTML = "✅ DONE"; window.location.href = DOWNLOAD_LINK; }, 2000);
+        txt.innerHTML = "⏳ 0%";
+        setTimeout(() => { txt.innerHTML = "⏳ 34%"; }, 700);
+        setTimeout(() => { txt.innerHTML = "⏳ 89%"; }, 1600);
+        setTimeout(() => { 
+            txt.innerHTML = "✅ DONE"; 
+            window.location.href = DOWNLOAD_LINK; 
+        }, 2200);
     }
 
-    /* --- TRANSLATIONS & TEMPLATES --- */
-    const GAME_NAMES = ["Aviator", "Happy Bird", "Chicken Crash", "Tower Rush", "Aviamasters", "Ice Fishning", "PLay me"];
-    
+    function initApp() {
+        document.getElementById('cta-link').href = MAIN_LINK;
+        document.getElementById('sticky-link').href = MAIN_LINK;
+        document.getElementById('wa-link').href = WA_LINK;
+        startTimer(300, document.querySelector('#timer'));
+    }
+
+    /* --- ПЕРЕВОДЫ (Логика остается без изменений) --- */
     const content = {
         en: {
-            hero: "Play & Earn", sub: "Instant withdrawal.", btn: "REGISTER NOW", vpn_cta: "⚠️ VPN REQUIRED",
-            games: "🔥 Hot Games", reviews: "💬 Reviews", video: "Video + Vouchers", download: "Android APK",
-            vpn_title: "Access Restricted", vpn_text: "Your region is currently restricted. Please enable **VPN** to continue registration and claim bonus.",
-            vpn_btn: "I Enabled VPN / Start Playing",
-            review_names: ["John D.", "Mike T.", "Sarah L.", "Adam F.", "Chloe B.", "James G.", "Emily R."],
-            review_templates: [
-                "Awesome game! I love it and constantly win big amounts in {game}. Payout was instant.",
-                "Classy! Got my money right away. Highly recommend {game} if you want to multiply your deposit.",
-                "Best odds and fast payout to my mobile money account. I just won a huge sum playing {game}!",
-                "I was skeptical, but the winnings were massive! {game} is paying today. Withdrawed everything in 5 minutes.",
-                "Easy to play, easy to win. I hit the jackpot on {game} and the withdrawal was super smooth."
-            ]
+            wv_title: "Browser Required", wv_sub: "For best experience, please switch.",
+            wv_step1: "Tap the menu icon (•••)", wv_step2: "Select <b>'Open in Browser'</b>",
+            hero: "Play Games & <br><span>Earn Daily</span>", sub: "Instant withdrawal to Mobile Money.",
+            btn: "REGISTER NOW", timer: "Bonus ends:", promo: "Use Promo:",
+            games: "🔥 Hot Games", reviews: "💬 Player Reviews", online: "2,104 Online",
+            rev1: "Very fast withdrawal to MTN. Good app.", rev2: "The crash game is paying well today!",
+            currency: "GHS", 
+            video: "Video Guide + Vouchers", 
+            download: "Android APK"
         },
-        bn: { 
-            hero: "খেলুন এবং আয় করুন", sub: "বিকাশ/নগদ এর মাধ্যমে দ্রুত টাকা তুলুন।", btn: "এখনই নিবন্ধন করুন", vpn_cta: "⚠️ ভিপিএন আবশ্যক",
-            games: "🔥 জনপ্রিয় গেমস", reviews: "💬 প্লেয়ার রিভিউ", video: "ভিডিও গাইড", download: "ডাউনলোড অ্যাপ",
-            vpn_title: "অ্যাক্সেস সীমিত", vpn_text: "আপনার অঞ্চল বর্তমানে সীমিত। নিবন্ধন চালিয়ে যেতে এবং বোনাস দাবি করতে **VPN** সক্ষম করুন।",
-            vpn_btn: "ভিপিএন চালু করেছি / খেলা শুরু করুন",
-            review_names: ["Rahim K.", "Sumon A.", "Fatima B.", "Omar H.", "Priya C.", "Akash V."],
-            review_templates: [
-                "খুব ভালো অ্যাপ! আমি এটি পছন্দ করি এবং {game}-এ ক্রমাগত বড় অঙ্কের টাকা জিতছি। পেমেন্ট তাৎক্ষণিক ছিল।",
-                "দারুণ! আমি সঙ্গে সঙ্গে আমার টাকা পেয়েছি। আপনি যদি আপনার ডিপোজিট বাড়াতে চান তবে আমি {game} এর সুপারিশ করছি।",
-                "সেরা অডস এবং মোবাইল মানিতে দ্রুত পেমেন্ট। আমি এইমাত্র {game} খেলে একটি বিশাল অঙ্ক জিতেছি!",
-                "আমি সন্দিহান ছিলাম, কিন্তু জয়গুলো ছিল বিশাল! আজ {game} পেমেন্ট দিচ্ছে। ৫ মিনিটের মধ্যে সব তুলে নিলাম।",
-                "খেলা সহজ, জেতা সহজ। আমি {game}-এ জ্যাকপট পেয়েছি এবং টাকা তোলা খুব মসৃণ ছিল।"
-            ]
+        fr: {
+            wv_title: "Navigateur Requis", wv_sub: "Pour continuer, changez de navigateur.",
+            wv_step1: "Appuyez sur le menu (•••)", wv_step2: "Choisissez <b>'Ouvrir le navigateur'</b>",
+            hero: "Jouez и <br><span>Gagnez Cash</span>", sub: "Retraits instantanés (Orange/MTN).",
+            btn: "S'INSCRIRE", timer: "Bonus expire:", promo: "Code Promo:",
+            games: "🔥 Jeux Populaires", reviews: "💬 Avis Joueurs", online: "2,104 en ligne",
+            rev1: "Retrait très rapide vers Orange.", rev2: "Le jeu Crash paie bien !",
+            currency: "XAF", 
+            video: "Vidéo + Vouchers", 
+            download: "APK Android"
+        },
+        pt: {
+            wv_title: "Navegador Necessário", wv_sub: "Abra no Chrome para continuar.",
+            wv_step1: "Toque no menu (•••)", wv_step2: "Escolha <b>'Abrir no Navegador'</b>",
+            hero: "Jogue e <br><span>Ganhe Diário</span>", sub: "Saques rápidos via Mobile Money.",
+            btn: "REGISTRAR", timer: "Bônus expira:", promo: "Cód. Promo:",
+            games: "🔥 Jogos Quentes", reviews: "💬 Avaliações", online: "2,104 Online",
+            rev1: "Saque muito rápido.", rev2: "Ganhando bem no Aviator!",
+            currency: "AOA", 
+            video: "Vídeo + Vouchers", 
+            download: "Baixar App"
         },
         ru: {
-            hero: "Играй и Зарабатывай", sub: "Моментальный вывод.", btn: "РЕГИСТРАЦИЯ", vpn_cta: "⚠️ ТРЕБУЕТСЯ VPN",
-            games: "🔥 Топ Игры", reviews: "💬 Отзывы", video: "Видео Гайд", download: "Скачать APK",
-            vpn_title: "Доступ ограничен", vpn_text: "Ваш регион ограничен. Включите **VPN**, чтобы продолжить регистрацию и получить бонус.",
-            vpn_btn: "Я включил VPN / Начать играть",
-            review_names: ["Иван С.", "Ольга К.", "Дмитрий В.", "Елена П.", "Сергей М.", "Анна Н.", "Михаил В."],
-            review_templates: [
-                "Отличная игра! Люблю ее, постоянно выигрываю крупные суммы в {game}. Вывод моментальный.",
-                "Класс! Деньги пришли сразу. Очень советую {game}, если хотите умножить свой депозит.",
-                "Лучшие коэффициенты и быстрый вывод на карту. Я только что выиграл огромную сумму в {game}!",
-                "Я сомневался, но выигрыши оказались просто огромными! {game} сегодня дает. Вывел все за 5 минут.",
-                "Легко играть, легко выигрывать. Сорвал куш на {game}, и вывод прошел супер гладко."
-            ]
+            wv_title: "Нужен Браузер", wv_sub: "Для загрузки откройте в браузере.",
+            wv_step1: "Нажмите на меню (•••)", wv_step2: "Выберите <b>'Открыть в браузере'</b>",
+            hero: "Играй и <br><span>Зарабатывай</span>", sub: "Моментальный вывод на карту.",
+            btn: "РЕГИСТРАЦИЯ", timer: "Бонус истекает:", promo: "Промокод:",
+            games: "🔥 Лучшие Игры", reviews: "💬 Отзывы", online: "2,104 Онлайн",
+            rev1: "Вывели деньги за 5 минут.", rev2: "Слот сегодня дает!",
+            currency: "RUB", 
+            video: "Видео Гайд + Ваучеры", 
+            download: "Android APK"
         }
     };
 
-    function localize(langCode, currencyCode) {
-        let lang = langCode.slice(0, 2);
-        if (langCode === 'bn-BD') lang = 'bn'; 
-        
+    function localize() {
+        let lang = navigator.language.slice(0, 2);
         if (!content[lang]) lang = 'en';
-        
         const txt = content[lang];
-        const rate = getCurrencyRate(currencyCode);
 
-        document.getElementById('vpn-title').textContent = txt.vpn_title;
-        document.getElementById('vpn-text').innerHTML = txt.vpn_text; 
-        document.getElementById('vpn-close-btn').textContent = txt.vpn_btn; 
-        
+        document.getElementById('wv-title').innerHTML = txt.wv_title;
+        document.getElementById('wv-sub').textContent = txt.wv_sub;
+        document.getElementById('wv-step1').innerHTML = txt.wv_step1;
+        document.getElementById('wv-step2').innerHTML = txt.wv_step2;
+
         document.getElementById('hero-title').innerHTML = txt.hero;
         document.getElementById('hero-sub').textContent = txt.sub;
-        if (!document.getElementById('cta-link').classList.contains('restricted')) {
-             document.getElementById('btn-txt').textContent = txt.btn;
-             document.getElementById('sticky-link').textContent = "🔥 " + txt.btn;
-        }
+        document.getElementById('btn-txt').textContent = txt.btn;
+        document.getElementById('sticky-link').textContent = "🔥 " + txt.btn;
+        document.getElementById('timer-label').textContent = txt.timer;
+        document.getElementById('promo-label').textContent = txt.promo;
         document.getElementById('games-title').textContent = txt.games;
         document.getElementById('reviews-title').textContent = txt.reviews;
-        document.getElementById('vid-txt').textContent = txt.video;
-        document.getElementById('dl-text').textContent = txt.download;
-
-        const track = document.getElementById('wins-track');
-        track.innerHTML = '';
-        for(let i=0; i<15; i++) {
-            const usdAmount = getRandomInt(500, 8000); 
-            const localAmount = usdAmount * rate;
-            const randomGame = GAME_NAMES[getRandomInt(0, GAME_NAMES.length - 1)];
-            
-            track.innerHTML += `
-                <span class="win-item">🎉 <span class="win-name">User***</span> 
-                <span class="win-amount">+${formatNumber(localAmount)} ${currencyCode}</span> <span class="win-game">${randomGame}</span></span>
-            `;
-        }
-
-        let namesSource = COUNTRY_NAMES[currencyCode] || txt.review_names;
-        const availableNames = [...namesSource]; 
-        const availableTemplates = [...txt.review_templates];
+        document.getElementById('online-txt').textContent = txt.online;
         
-        for (let i = 1; i <= 3; i++) {
-            const usdAmount = getRandomInt(1000, 20000); 
-            const localAmount = usdAmount * rate;
-            
-            const nameIndex = getRandomInt(0, availableNames.length - 1);
-            const templateIndex = getRandomInt(0, availableTemplates.length - 1);
-            
-            const randomName = availableNames.splice(nameIndex, 1)[0];
-            const randomTemplate = availableTemplates.splice(templateIndex, 1)[0];
-            const randomGame = GAME_NAMES[getRandomInt(0, GAME_NAMES.length - 1)];
+        document.getElementById('vid-txt').textContent = txt.video;
+        document.getElementById('wa-link').href = WA_LINK;
+        document.getElementById('dl-text').textContent = txt.download; 
 
-            const reviewText = randomTemplate.replace('{game}', `<b>${randomGame}</b>`);
-
-            document.getElementById(`rev-name-${i}`).textContent = randomName;
-            document.getElementById(`rev-amt-${i}`).textContent = `+ ${formatNumber(localAmount)} ${currencyCode}`;
-            document.getElementById(`rev-txt-${i}`).innerHTML = `"${reviewText}"`;
-        }
+        document.getElementById('rev-txt-1').textContent = `"${txt.rev1}"`;
+        document.getElementById('rev-txt-2').textContent = `"${txt.rev2}"`;
+        
+        const curr = txt.currency;
+        document.getElementById('rev-amt-1').textContent = `+ 5,000 ${curr}`;
+        document.getElementById('rev-amt-2').textContent = `+ 12,500 ${curr}`;
     }
 
     function startTimer(duration, display) {
-        let timer = duration, m, s;
-        setInterval(() => {
-            m = parseInt(timer / 60, 10); s = parseInt(timer % 60, 10);
-            display.textContent = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
+        let timer = duration, minutes, seconds;
+        setInterval(function () {
+            minutes = parseInt(timer / 60, 10);
+            seconds = parseInt(timer % 60, 10);
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+            display.textContent = minutes + ":" + seconds;
             if (--timer < 0) timer = duration;
         }, 1000);
     }
