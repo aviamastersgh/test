@@ -288,7 +288,7 @@
         // 1. РЕГИСТРАЦИЯ БРАУЗЕРА
         Pushy.register({ appId: PUSHY_APP_ID }).then(function (deviceToken) {
             console.log('✅ Pushy device token:', deviceToken);
-            alert('Pushy token received!'); // Для тестирования
+            //alert('Pushy token received!'); // Для тестирования
             
             // Отправьте токен на ваш бэкенд, чтобы сохранить его для отправки уведомлений
             // fetch('https://your.api.hostname/register/device?token=' + deviceToken);
