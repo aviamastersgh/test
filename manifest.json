@@ -3,7 +3,7 @@
   "name": "OneSignal Manifest Example",
   "short_name": "OS Manifest",
   "display": "standalone",
-  "start_url": "https://test1-lemon-nu-30.vercel.app/",
+  "start_url": "https://test11-lemon-nu-30.vercel.app/",
   "theme_color": "#E54B4D",
   "background_color": "#ffffff",
   "id": "?homescreen=1"
