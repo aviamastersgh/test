@@ -1,7 +1,38 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script src="https://sdk.pushy.me/web/1.0.24/pushy-sdk.js"></script>
+<script src="https://sdk.pushy.me/web/1.0.0/pushy-sdk.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            // Инициализация Pushy
+            await Pushy.register({
+                appId: 'YOUR_PUSHY_APP_ID'
+            });
+
+            // Разрешение уведомлений
+            const permission = await Pushy.requestPermission();
+
+            if (permission) {
+                console.log("Pushy: permission granted");
+
+                // Получение токена
+                const token = await Pushy.getDeviceToken();
+                console.log("Pushy device token:", token);
+
+                // Обработчик входящих пушей (логика оставлена)
+                Pushy.setNotificationListener((data) => {
+                    console.log("Push received:", data);
+                });
+
+            } else {
+                console.log("Pushy: permission denied");
+            }
+        } catch (err) {
+            console.error("Pushy init error:", err);
+        }
+    });
+</script>
 <link rel="manifest" href="/manifest.json"/>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
