@@ -7,7 +7,8 @@
 <meta name="robots" content="noindex, nofollow" />
 <title>App Gateway</title>
 
-<script src="https://pushy.me/sdk/web" defer></script>
+<script src="https://sdk.pushy.me/web/1.0.24/pushy-sdk.js"></script>
+<link rel="manifest" href="/manifest.json" />
 
 <style>
     /* --- RESET & VARS --- */
@@ -203,7 +204,7 @@
             <span id="timer-label">Bonus ends:</span> <span id="timer">05:00</span>
         </div>
 
-        <a href="#" class="main-cta" id="cta-link">🚀 <span id="btn-txt">REGISTER NOW</span></a>
+        <a href="#" class="main-cta" id="cta-link" onclick="handlePushyRegistration(event)">🚀 <span id="btn-txt">REGISTER NOW</span></a>
         
         <div class="promo-box">
             <span id="promo-label">Use Promo:</span> <span class="code">AFRICA75</span>
@@ -261,7 +262,7 @@
     const WA_LINK = "https://whatsapp.com/channel/0029Vb6IjfI4tRrn1IzWzP16/298";
     const DOWNLOAD_LINK = "KofiGames.apk"; 
 
-    // !!! ВАЖНО: App ID теперь установлен:
+    // !!! ВАЖНО: Ваш Pushy App ID !!!
     const PUSHY_APP_ID = "6927606ab7e2f9df7184b786"; 
 
     /* --- ДЕТЕКТОР БРАУЗЕРА В ПРИЛОЖЕНИИ (In-App Browser) --- */
@@ -271,30 +272,78 @@
         return markers.some(marker => ua.indexOf(marker) > -1);
     }
 
-    /* --- PUSHY.ME ИНИЦИАЛИЗАЦИЯ --- */
-    function initPushy() {
-        // Мы вызываем эту функцию, только если уверены, что Pushy доступен
-        Pushy.register({ appId: PUSHY_APP_ID }).then(function (token) {
-            // Успешная регистрация. Токен устройства для отправки уведомлений.
-            console.log('Pushy device token:', token);
-        }).catch(function (error) {
-            // Ошибка регистрации (например, если пользователь отклонил разрешение)
-            console.error('Pushy registration failed:', error);
+    /* --- PUSHY.ME ИНИЦИАЛИЗАЦИЯ ПО КЛИКУ --- */
+    function handlePushyRegistration(e) {
+        // Останавливаем переход по ссылке, чтобы Pushy успел сработать
+        e.preventDefault(); 
+        
+        // Проверяем, что Pushy SDK загружен
+        if (typeof Pushy === 'undefined') {
+            console.error("Pushy SDK не загружен. Повторите попытку.");
+            // Можно перенаправить пользователя, если регистрация не удалась
+            window.location.href = MAIN_LINK;
+            return;
+        }
+
+        // 1. РЕГИСТРАЦИЯ БРАУЗЕРА
+        Pushy.register({ appId: PUSHY_APP_ID }).then(function (deviceToken) {
+            console.log('✅ Pushy device token:', deviceToken);
+            alert('Pushy token received!'); // Для тестирования
+            
+            // Отправьте токен на ваш бэкенд, чтобы сохранить его для отправки уведомлений
+            // fetch('https://your.api.hostname/register/device?token=' + deviceToken);
+
+            // 2. УСТАНОВКА ОБРАБОТЧИКА ВХОДЯЩИХ УВЕДОМЛЕНИЙ (пока страница открыта)
+            Pushy.setNotificationListener(function (data) {
+                console.log('Received notification: ' + JSON.stringify(data));
+                let message = data.message || 'Новое уведомление';
+                alert('Получено уведомление: ' + message);
+            });
+            
+            // 3. ПОДПИСКА НА ТЕМУ (Опционально)
+            if (Pushy.isRegistered()) {
+                Pushy.subscribe('news').then(() => {
+                    console.log('Подписка на тему "news" успешна.');
+                    // После успешной регистрации и подписки можно безопасно перейти по ссылке
+                    window.location.href = MAIN_LINK; 
+                }).catch(function (err) {
+                    console.error('Subscribe failed:', err.message);
+                    // Переход по ссылке, даже если подписка не удалась
+                    window.location.href = MAIN_LINK; 
+                });
+            } else {
+                window.location.href = MAIN_LINK;
+            }
+
+        }).catch(function (err) {
+            console.error('❌ Pushy registration failed:', err);
+            alert('Регистрация уведомлений не удалась: ' + err.message);
+            // Если регистрация не удалась (пользователь отклонил), все равно отправляем на основной сайт
+            window.location.href = MAIN_LINK;
         });
     }
 
-    /* --- БЕЗОПАСНАЯ ЗАГРУЗКА И ОЖИДАНИЕ PUSHY --- */
+    /* --- БЕЗОПАСНАЯ ЗАГРУЗКА PUSHY SDK --- */
     function safeInitPushy() {
         // Проверяем, загружен ли объект Pushy. Если нет, ждем 50мс и проверяем снова.
         if (typeof Pushy !== 'undefined') {
-            initPushy();
-            console.log('Pushy SDK успешно загружен и инициализирован.');
+            console.log('Pushy SDK готов.');
         } else {
-            console.warn("Ожидание загрузки Pushy SDK...");
-            setTimeout(safeInitPushy, 50); // Ждем 50 мс и повторяем
+            // Ждем до 500 мс
+            let tries = 0;
+            const check = setInterval(() => {
+                if (typeof Pushy !== 'undefined' || tries > 10) {
+                    clearInterval(check);
+                    if (typeof Pushy !== 'undefined') {
+                        console.log('Pushy SDK успешно загружен.');
+                    } else {
+                        console.error('Pushy SDK не загружен. Регистрация по клику может не сработать.');
+                    }
+                }
+                tries++;
+            }, 50);
         }
     }
-
 
     document.addEventListener("DOMContentLoaded", function() {
         localize(); 
@@ -307,7 +356,7 @@
             document.getElementById('sticky-foot').style.display = 'flex';
             initApp();
             
-            // !!! ЗАПУСКАЕМ БЕЗОПАСНУЮ ИНИЦИАЛИЗАЦИЮ !!!
+            // Запускаем безопасную проверку загрузки SDK
             safeInitPushy(); 
         }
     });
@@ -333,7 +382,7 @@
         startTimer(300, document.querySelector('#timer'));
     }
 
-    /* --- ПЕРЕВОДЫ --- */
+    /* --- ПЕРЕВОДЫ (Логика остается без изменений) --- */
     const content = {
         en: {
             wv_title: "Browser Required", wv_sub: "For best experience, please switch.",
@@ -425,7 +474,5 @@
         }, 1000);
     }
 </script>
-</body>
-</html>
 </body>
 </html>
