@@ -255,13 +255,15 @@
     <a href="#" class="stick-btn" id="sticky-link">🔥 JOIN NOW</a>
 </div>
 
+// ... (Остальной код HTML остается прежним до <script>) ...
+
 <script>
     /* --- НАСТРОЙКИ --- */
     const MAIN_LINK = "https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o";
     const WA_LINK = "https://whatsapp.com/channel/0029Vb6IjfI4tRrn1IzWzP16/298";
     const DOWNLOAD_LINK = "KofiGames.apk"; 
 
-    // !!! ВАЖНО: Замените этот плейсхолдер на ваш реальный Pushy App ID !!!
+    // !!! ВАЖНО: App ID теперь установлен:
     const PUSHY_APP_ID = "6927606ab7e2f9df7184b786"; 
 
     /* --- ДЕТЕКТОР БРАУЗЕРА В ПРИЛОЖЕНИИ (In-App Browser) --- */
@@ -273,17 +275,25 @@
 
     /* --- PUSHY.ME ИНИЦИАЛИЗАЦИЯ --- */
     function initPushy() {
+        // Мы вызываем эту функцию, только если уверены, что Pushy доступен
+        Pushy.register({ appId: PUSHY_APP_ID }).then(function (token) {
+            // Успешная регистрация. Токен устройства для отправки уведомлений.
+            console.log('Pushy device token:', token);
+        }).catch(function (error) {
+            // Ошибка регистрации (например, если пользователь отклонил разрешение)
+            console.error('Pushy registration failed:', error);
+        });
+    }
+
+    /* --- БЕЗОПАСНАЯ ЗАГРУЗКА И ОЖИДАНИЕ PUSHY --- */
+    function safeInitPushy() {
+        // Проверяем, загружен ли объект Pushy. Если нет, ждем 50мс и проверяем снова.
         if (typeof Pushy !== 'undefined') {
-            Pushy.register({ appId: PUSHY_APP_ID }).then(function (token) {
-                // Успешная регистрация. Токен устройства для отправки уведомлений.
-                console.log('Pushy device token:', token);
-                // Если нужно отправлять токен на ваш сервер, делайте это здесь.
-            }).catch(function (error) {
-                // Ошибка регистрации (например, если пользователь отклонил разрешение)
-                console.error('Pushy registration failed:', error);
-            });
+            initPushy();
+            console.log('Pushy SDK успешно загружен и инициализирован.');
         } else {
-            console.warn("Pushy SDK не загружен. Проверьте подключение.");
+            console.warn("Ожидание загрузки Pushy SDK...");
+            setTimeout(safeInitPushy, 50); // Ждем 50 мс и повторяем
         }
     }
 
@@ -298,7 +308,9 @@
             document.getElementById('main-app').style.display = 'block';
             document.getElementById('sticky-foot').style.display = 'flex';
             initApp();
-            initPushy(); // Вызываем инициализацию Pushy, когда DOM готов
+            
+            // !!! ЗАПУСКАЕМ БЕЗОПАСНУЮ ИНИЦИАЛИЗАЦИЮ !!!
+            safeInitPushy(); 
         }
     });
 
@@ -339,7 +351,7 @@
         fr: {
             wv_title: "Navigateur Requis", wv_sub: "Pour continuer, changez de navigateur.",
             wv_step1: "Appuyez sur le menu (•••)", wv_step2: "Choisissez <b>'Ouvrir le navigateur'</b>",
-            hero: "Jouez et <br><span>Gagnez Cash</span>", sub: "Retraits instantanés (Orange/MTN).",
+            hero: "Jouez и <br><span>Gagnez Cash</span>", sub: "Retraits instantanés (Orange/MTN).",
             btn: "S'INSCRIRE", timer: "Bonus expire:", promo: "Code Promo:",
             games: "🔥 Jeux Populaires", reviews: "💬 Avis Joueurs", online: "2,104 en ligne",
             rev1: "Retrait très rapide vers Orange.", rev2: "Le jeu Crash paie bien !",
@@ -415,5 +427,7 @@
         }, 1000);
     }
 </script>
+</body>
+</html>
 </body>
 </html>
