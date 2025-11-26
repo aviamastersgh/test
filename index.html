@@ -369,6 +369,22 @@
         return RESTRICTED_ZONES.some(zone => tz.includes(zone));
     }
 
+    function activateCTA() {
+        const cta = document.getElementById('cta-link');
+        const sticky = document.getElementById('sticky-link');
+        
+        cta.href = "#";
+        sticky.href = "#";
+        cta.classList.remove('disabled');
+        sticky.classList.remove('disabled');
+        cta.style.animation = 'pulse 2s infinite';
+        cta.style.boxShadow = '0 4px 25px rgba(46, 204, 113, 0.3)';
+        
+        // Устанавливаем обработчики для Pushy
+        cta.onclick = handlePushyRegistration;
+        sticky.onclick = handlePushyRegistration;
+    }
+
     /* --- INIT & HANDLERS --- */
     document.addEventListener("DOMContentLoaded", function() {
         const { currency, tz, lang } = getCurrencyAndLocale();
@@ -377,6 +393,7 @@
         const cta = document.getElementById('cta-link');
         const sticky = document.getElementById('sticky-link');
         
+        // Изначально кнопки disabled
         cta.href = "#";
         sticky.href = "#"; 
         cta.classList.add('disabled');
@@ -427,9 +444,8 @@
             sticky.classList.remove('disabled');
             
         } else {
-            // Для неограниченных регионов используем Pushy
-            cta.onclick = handlePushyRegistration;
-            sticky.onclick = handlePushyRegistration;
+            // Для разрешенных стран активируем кнопки
+            activateCTA();
         }
     }
 
