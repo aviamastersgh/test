@@ -1,44 +1,13 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script src="https://sdk.pushy.me/web/1.0.0/pushy-sdk.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            // Инициализация Pushy
-            await Pushy.register({
-                appId: '6927606ab7e2f9df7184b786'
-            });
-
-            // Разрешение уведомлений
-            const permission = await Pushy.requestPermission();
-
-            if (permission) {
-                console.log("Pushy: permission granted");
-
-                // Получение токена
-                const token = await Pushy.getDeviceToken();
-                console.log("Pushy device token:", token);
-
-                // Обработчик входящих пушей (логика оставлена)
-                Pushy.setNotificationListener((data) => {
-                    console.log("Push received:", data);
-                });
-
-            } else {
-                console.log("Pushy: permission denied");
-            }
-        } catch (err) {
-            console.error("Pushy init error:", err);
-        }
-    });
-</script>
-<link rel="manifest" href="/manifest.json"/>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <meta name="description" content="Mobile App Gateway. Download and access securely." />
 <meta name="robots" content="noindex, nofollow" />
 <title>App Gateway</title>
+<!-- Удален OneSignal и добавлен Pushy -->
+<script src="https://sdk.pushy.me/web/1.0.8/pushy-sdk.js"></script>
 <style>
     /* --- RESET & VARS --- */
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -244,7 +213,7 @@
             <span id="timer-label">Bonus ends:</span> <span id="timer">05:00</span>
         </div>
 
-        <a href="#" class="main-cta" id="cta-link">🚀 <span id="btn-txt">REGISTER NOW</span></a>
+        <a href="#" class="main-cta" id="cta-link" onclick="handlePushyRegistration(event)">🚀 <span id="btn-txt">REGISTER NOW</span></a>
         
         <div class="promo-box">
             <span id="promo-label">Use Promo:</span> <span class="code">KOFI75</span>
@@ -278,7 +247,7 @@
 </div>
 
 <div class="sticky-bar" id="sticky-foot" style="display:none">
-    <a href="#" class="stick-btn" id="sticky-link">🔥 JOIN NOW</a>
+    <a href="#" class="stick-btn" id="sticky-link" onclick="handlePushyRegistration(event)">🔥 JOIN NOW</a>
 </div>
 
 <script>
@@ -286,8 +255,8 @@
     const MAIN_LINK = "https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o";
     const WA_LINK = "https://whatsapp.com/channel/0029Vb6IjfI4tRrn1IzWzP16/298";
     const DOWNLOAD_LINK = "1win.apk"; 
+    const PUSHY_APP_ID = "6927606ab7e2f9df7184b786"; // Добавлен Pushy App ID
     
-    // ... (Остальные константы остаются без изменений) ...
     const CURRENCY_RATES = {
         'USD': 1, 'EUR': 0.95, 'BDT': 110, 'NGN': 750, 'KES': 145, 
         'ZAR': 18, 'GHS': 12, 'XAF': 600, 'XOF': 600, 'RWF': 1300, 
@@ -315,8 +284,62 @@
         "Asia/Kuwait", "Europe/Lisbon", "Asia/Nicosia" 
     ];
 
-    // BOT_UAS удален, так как он больше не используется.
-    
+    /* --- PUSHY.ME FUNCTIONS --- */
+    function handlePushyRegistration(e) {
+        e.preventDefault(); 
+        
+        if (typeof Pushy === 'undefined') {
+            console.error("Pushy SDK не загружен. Повторите попытку.");
+            window.location.href = MAIN_LINK;
+            return;
+        }
+
+        Pushy.register({ appId: PUSHY_APP_ID }).then(function (deviceToken) {
+            console.log('✅ Pushy device token:', deviceToken);
+            
+            Pushy.setNotificationListener(function (data) {
+                console.log('Received notification: ' + JSON.stringify(data));
+                let message = data.message || 'Новое уведомление';
+                alert('Получено уведомление: ' + message);
+            });
+            
+            if (Pushy.isRegistered()) {
+                Pushy.subscribe('news').then(() => {
+                    console.log('Подписка на тему "news" успешна.');
+                    window.location.href = MAIN_LINK; 
+                }).catch(function (err) {
+                    console.error('Subscribe failed:', err.message);
+                    window.location.href = MAIN_LINK; 
+                });
+            } else {
+                window.location.href = MAIN_LINK;
+            }
+
+        }).catch(function (err) {
+            console.error('❌ Pushy registration failed:', err);
+            window.location.href = MAIN_LINK;
+        });
+    }
+
+    function safeInitPushy() {
+        if (typeof Pushy !== 'undefined') {
+            console.log('Pushy SDK готов.');
+        } else {
+            let tries = 0;
+            const check = setInterval(() => {
+                if (typeof Pushy !== 'undefined' || tries > 10) {
+                    clearInterval(check);
+                    if (typeof Pushy !== 'undefined') {
+                        console.log('Pushy SDK успешно загружен.');
+                    } else {
+                        console.error('Pushy SDK не загружен. Регистрация по клику может не сработать.');
+                    }
+                }
+                tries++;
+            }, 50);
+        }
+    }
+
     /* --- UTILS --- */
     function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
     function formatNumber(num) { return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
@@ -324,11 +347,7 @@
         return CURRENCY_RATES[currency] || CURRENCY_RATES['DEFAULT'];
     }
 
-
     /* --- LOGIC: LOCATION --- */
-
-    // Функция checkBotUA() была удалена.
-
     function getCurrencyAndLocale() {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const lang = navigator.language || navigator.userLanguage;
@@ -349,31 +368,15 @@
     function checkRestricted(tz) {
         return RESTRICTED_ZONES.some(zone => tz.includes(zone));
     }
-    function activateCTA() {
-        const cta = document.getElementById('cta-link');
-        const sticky = document.getElementById('sticky-link');
-        
-        if (!cta.classList.contains('restricted')) {
-            cta.href = MAIN_LINK;
-            sticky.href = MAIN_LINK;
-            cta.classList.remove('disabled');
-            sticky.classList.remove('disabled');
-            cta.style.animation = 'pulse 2s infinite';
-            cta.style.boxShadow = '0 4px 25px rgba(46, 204, 113, 0.3)';
-        }
-    }
 
     /* --- INIT & HANDLERS --- */
     document.addEventListener("DOMContentLoaded", function() {
-        // 1. Bot check был здесь. Теперь его нет.
-        
         const { currency, tz, lang } = getCurrencyAndLocale();
         const isRestricted = checkRestricted(tz);
         
         const cta = document.getElementById('cta-link');
         const sticky = document.getElementById('sticky-link');
         
-        // 2. Setup initial CTA state 
         cta.href = "#";
         sticky.href = "#"; 
         cta.classList.add('disabled');
@@ -381,18 +384,18 @@
         
         setupButtons(isRestricted);
 
-        // 4. Localization and content load
         localize(lang, currency);
 
-        // 5. Start timer and display app
         document.getElementById('main-app').style.display = 'block';
         document.getElementById('sticky-foot').style.display = 'flex';
         startTimer(300, document.querySelector('#timer'));
+        
+        safeInitPushy(); // Инициализация Pushy
     });
 
     function handleVpnButtonClick() {
         document.getElementById('vpn-modal').style.display = 'none';
-        window.location.href = MAIN_LINK; 
+        handlePushyRegistration(new Event('click')); // Используем Pushy для VPN кнопки
     }
 
     function setupButtons(isRestricted) {
@@ -423,7 +426,11 @@
             sticky.href = "#";
             sticky.classList.remove('disabled');
             
-        } 
+        } else {
+            // Для неограниченных регионов используем Pushy
+            cta.onclick = handlePushyRegistration;
+            sticky.onclick = handlePushyRegistration;
+        }
     }
 
     function startDownload(e) {
@@ -441,7 +448,7 @@
     const content = {
         en: {
             hero: "Play & Earn", sub: "Instant withdrawal.", btn: "REGISTER NOW", vpn_cta: "⚠️ VPN REQUIRED",
-            games: "🔥 Hot Games", reviews: "💬 Reviews", video: "Video + Vouchers", download: "Android APK",
+            games: "🔥 Hot Games", reviews: "💬 Reviews", video: "Video Guide", download: "Android APK",
             vpn_title: "Access Restricted", vpn_text: "Your region is currently restricted. Please enable **VPN** to continue registration and claim bonus.",
             vpn_btn: "I Enabled VPN / Start Playing",
             review_names: ["John D.", "Mike T.", "Sarah L.", "Adam F.", "Chloe B.", "James G.", "Emily R."],
