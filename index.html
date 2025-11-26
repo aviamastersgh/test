@@ -15,18 +15,19 @@
     const ONESIGNAL_APP_ID = "346747bb-3679-4eb6-a27c-5aac89423cfb"; 
 
     window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.isOneSignalReady = false; // <-- Флаг готовности
+
     OneSignalDeferred.push(async function(OneSignal) {
         await OneSignal.init({
             appId: ONESIGNAL_APP_ID,
-            // ОТКЛЮЧАЕМ АВТОМАТИЧЕСКИЙ ЗАПРОС
             welcomeNotification: {
                 disable: true
             }
         });
-        console.log('OneSignal SDK инициализирован.');
+        window.isOneSignalReady = true; // <-- Устанавливаем флаг в true
+        console.log('OneSignal SDK инициализирован и готов к работе.');
     });
 </script>
-
 <style>
     /* --- RESET & VARS --- */
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -287,16 +288,18 @@
     }
 
     /* --- 4. НОВАЯ ЛОГИКА ONESIGNAL ПО КЛИКУ --- */
+    /* --- НОВАЯ ЛОГИКА ONESIGNAL ПО КЛИКУ --- */
     function handleRegistration(e) {
         e.preventDefault(); 
         
-        if (!window.OneSignal) {
-            console.error("OneSignal SDK не загружен. Перенаправляем.");
+        // Проверка готовности SDK
+        if (!window.OneSignal || !window.isOneSignalReady) {
+            console.error("OneSignal SDK не загружен или не готов. Перенаправляем немедленно.");
             window.location.href = MAIN_LINK;
             return;
         }
-
-        // Проверяем статус разрешения уведомлений
+    
+        // Если SDK готов, выполняем вашу логику OneSignal
         window.OneSignal.isPushNotificationsEnabled(function(isEnabled) {
             
             // Если статус известен (пользователь уже подписан или отклонил)
@@ -310,7 +313,6 @@
             if (isEnabled === null) {
                 console.log('Показ запроса OneSignal Slidedown.');
                 
-                // Вызываем всплывающий запрос уведомлений
                 window.OneSignal.showSlidedownPrompt();
                 
                 // Устанавливаем слушатели для перенаправления после взаимодействия
