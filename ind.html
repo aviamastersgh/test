@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<meta name="description" content="Mobile App Gateway. Download and access securely." />
+<meta name="robots" content="noindex, nofollow" />
+<title>App Gateway</title>
+
+<script src="https://sdk.pushy.me/web/1.0.8/pushy-sdk.js" async></script>
+
+<link rel="stylesheet" href="styles/styles.css"> 
+
+<script src="scripts/script.js" defer></script> 
+
+</head>
+<body>
+
+<div id="vpn-modal">
+    <div class="vpn-card">
+        <div class="vpn-icon">🛡️</div>
+        <div class="vpn-title" id="vpn-title">Access Restricted</div>
+        <div class="vpn-text" id="vpn-text">Your region is currently restricted.<br>Please enable <b>VPN</b> to continue registration and claim bonus.</div>
+        <button class="vpn-btn" id="vpn-close-btn">I Enabled VPN / Start Playing</button>
+        <button class="vpn-btn vpn-secondary-btn" id="vpn-close-simple-btn" style="margin-top: 10px;">Close</button> 
+    </div>
+</div>
+
+<div id="webview-guide">
+    <div class="guide-card">
+        <div class="guide-icon">📲</div>
+        <div class="guide-title">Browser Required</div>
+        <div class="guide-sub">To continue, please switch browser.</div>
+    </div>
+</div>
+
+<div id="main-app">
+    <div class="latest-wins">
+        <div class="wins-track" id="wins-track">
+            </div>
+    </div>
+
+    <div class="hero">
+        <h1 id="hero-title">Play Games & <br><span>Earn Daily</span></h1>
+        <p class="sub-hero" id="hero-sub">Instant withdrawal to Mobile Money.</p>
+        
+        <div class="timer-badge">
+            <span id="timer-label">Bonus ends:</span> <span id="timer">05:00</span>
+        </div>
+
+        <a href="#" class="main-cta" id="cta-link" onclick="handlePushyRegistration(event)">🚀 <span id="btn-txt">REGISTER NOW</span></a>
+        
+        <div class="promo-box">
+            <span id="promo-label">Use Promo:</span> <span class="code">KOFI75</span>
+        </div>
+
+        <div class="support-row">
+            <a href="#" class="sec-btn" id="wa-link">📹 <span id="vid-txt">Video Guide</span></a>
+            <a href="#" class="android-btn" id="dl-link" onclick="startDownload(event)">
+                <svg class="android-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993.0001.5511-.4482.9997-.9993.9997m-11.046 0c-.5511 0-.9993-.4486-.9993-.9997s.4482-.9993.9993-.9993c.5511 0 .9993.4482.9993.9993 0 .5511-.4482.9997-.9993.9997m11.4045-6.02l1.9973-3.4592a.416.416 0 0 0-.1521-.5676.416.416 0 0 0-.5676.1521l-2.0223 3.503C15.5902 8.4239 13.8533 8.0028 12 8.0028c-1.8533 0-3.5902.4211-5.1367.9668L4.8409 5.4667a.4161.4161 0 1 0-.7197.4155l1.9973 3.4592C2.6889 11.1867.3432 14.6589.0001 18.718h23.9998c-.3431-4.0591-2.6889-7.5313-6.1204-9.3966"/></svg>
+                <span id="dl-text">Android APK</span>
+            </a>
+        </div>
+        
+        <div id="payment-methods">
+            <span id="payment-text">Available payment methods:</span>
+            <span id="payment-methods-list" class="payment-list-text">Visa/MasterCard; Crypto (USDT); Bank Transfer</span>
+        </div>
+    </div>
+
+    <div class="section-title" id="games-title">🔥 Hot Games</div>
+    <div class="games-grid">
+        <a href="https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o" class="game-item"><img src="img/game1.webp" loading="lazy" alt="G1"><div class="game-title">Happy Bird</div></a>
+        <a href="https://1wgcmt.com/casino/play/infingames_galaxsys_play_me/?open=register&p=xzbf" class="game-item"><img src="img/game2.webp" loading="lazy" alt="G2"><div class="game-title">Play me</div></a>
+        <a href="https://lkxw.cc/dd4dc258" class="game-item"><img src="img/game3.webp" loading="lazy" alt="G3"><div class="game-title">Tower rush</div></a>
+        <a href="https://lkpq.cc/47fd0b" class="game-item"><img src="img/game4.webp" loading="lazy" alt="G4"><div class="game-title">Aviamasters</div></a>
+        <a href="https://1wgcmt.com/casino/play/v_evolution:1winicefishing/?open=register&p=48a3" class="game-item"><img src="img/game5.webp" loading="lazy" alt="G5"><div class="game-title">Ice Fishing</div></a>
+        <a href="https://1wgcmt.com/casino/play/infingames_galaxsys_chicken_crash/?open=register&p=t33c" class="game-item"><img src="img/game6.webp" loading="lazy" alt="G6"><div class="game-title">Chicken crash</div></a>
+        <a href="https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o" class="game-item"><img src="img/game7.webp" loading="lazy" alt="G5"><div class="game-title">Minecraft</div></a>
+        <a href="https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o" class="game-item"><img src="img/game8.webp" loading="lazy" alt="G6"><div class="game-title">Aviator</div></a>
+    </div>
+    <div class="section-title" id="reviews-title">💬 Player Reviews</div>
+    <div class="reviews">
+        <div class="review-card"><div class="r-head"><span class="r-name" id="rev-name-1">User 1</span><span class="r-money" id="rev-amt-1"></span></div><div class="r-text" id="rev-txt-1"></div></div>
+        <div class="review-card"><div class="r-head"><span class="r-name" id="rev-name-2">User 2</span><span class="r-money" id="rev-amt-2"></span></div><div class="r-text" id="rev-txt-2"></div></div>
+        <div class="review-card"><div class="r-head"><span class="r-name" id="rev-name-3">User 3</span><span class="r-money" id="rev-amt-3"></span></div><div class="r-text" id="rev-txt-3"></div></div>
+    </div>
+    
+    <div id="footer-warning">
+        **18+** | <span id="responsible-text">Play responsibly. Gambling can be addictive.</span>
+    </div>
+</div>
+
+<div class="sticky-bar" id="sticky-foot" style="display:none">
+    <a href="#" class="stick-btn" id="sticky-link" onclick="handlePushyRegistration(event)">🔥 JOIN NOW</a>
+</div>
+
+</body>
+</html>
