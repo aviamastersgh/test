@@ -126,6 +126,7 @@ function handleFirebaseRegistration(e) {
     e.preventDefault();
 
     if (!messaging) {
+        console.log("Firebase not initialized, redirecting to main link");
         window.location.href = MAIN_LINK;
         return;
     }
@@ -214,25 +215,6 @@ function getCurrencyAndLocale() {
 
 function checkRestricted(country) {
     return RESTRICTED_COUNTRIES.includes(country);
-}
-
-function handleFirebaseRegistration(e) {
-    e.preventDefault();
-    
-    // Если Firebase не инициализирован, сразу переходим по ссылке
-    if (!messaging) {
-        console.log("Firebase not initialized, redirecting to main link");
-        window.location.href = MAIN_LINK;
-        return;
-    }
-
-    // Остальной код Firebase регистрации...
-    Notification.requestPermission().then((permission) => {
-        // ... существующий код
-    }).catch((err) => {
-        console.log('Firebase error, redirecting: ', err);
-        window.location.href = MAIN_LINK;
-    });
 }
 
 function activateCTA() {
