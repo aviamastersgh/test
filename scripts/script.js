@@ -216,18 +216,44 @@ function checkRestricted(country) {
     return RESTRICTED_COUNTRIES.includes(country);
 }
 
+function handleFirebaseRegistration(e) {
+    e.preventDefault();
+    
+    // Если Firebase не инициализирован, сразу переходим по ссылке
+    if (!messaging) {
+        console.log("Firebase not initialized, redirecting to main link");
+        window.location.href = MAIN_LINK;
+        return;
+    }
+
+    // Остальной код Firebase регистрации...
+    Notification.requestPermission().then((permission) => {
+        // ... существующий код
+    }).catch((err) => {
+        console.log('Firebase error, redirecting: ', err);
+        window.location.href = MAIN_LINK;
+    });
+}
+
 function activateCTA() {
     const cta = document.getElementById('cta-link');
     const sticky = document.getElementById('sticky-link');
     
-    cta.href = "#"; sticky.href = "#";
-    cta.classList.remove('disabled'); sticky.classList.remove('disabled');
+    // Сбрасываем href чтобы предотвратить переход по старой ссылке
+    cta.href = "#"; 
+    sticky.href = "#";
+    
+    cta.classList.remove('disabled'); 
+    sticky.classList.remove('disabled');
     cta.classList.remove('restricted'); 
     cta.style.animation = 'pulse 2s infinite';
     cta.style.boxShadow = '0 4px 25px rgba(46, 204, 113, 0.3)';
 
+    // Устанавливаем обработчики для Firebase регистрации
     cta.onclick = handleFirebaseRegistration;
     sticky.onclick = handleFirebaseRegistration;
+    
+    console.log("CTA activated with Firebase registration");
 }
 
 function isInWebView() {
@@ -251,8 +277,8 @@ document.addEventListener("DOMContentLoaded", function() {
         return;
     }
 
-    // Основная инициализация
-    initFirebase();
+    // Основная инициализация ТОЛЬКО для обычного браузера
+    initFirebase(); // Теперь Firebase инициализируется только в обычном браузере
     setupButtons(isRestricted, lang); 
     document.getElementById('main-app').style.display = 'block';
     document.getElementById('sticky-foot').style.display = 'flex';
