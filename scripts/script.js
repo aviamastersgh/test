@@ -237,23 +237,23 @@ function isInWebView() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    // Проверка на WebView ДО основной инициализации
+    const { currency, tz, lang, tier, country } = getCurrencyAndLocale(); 
+    const isRestricted = checkRestricted(country); 
+
+    // Применяем переводы ДО проверки WebView
+    localize(lang, currency, tier, country);
+
+    // Проверка на WebView
     if (isInWebView()) {
         document.getElementById('webview-guide').style.display = 'flex';
         document.getElementById('main-app').style.display = 'none';
         document.getElementById('sticky-foot').style.display = 'none';
-        return; // Прерываем выполнение основного кода
+        return;
     }
 
-    // Основная инициализация (ваш существующий код)
-     const { currency, tz, lang, tier, country } = getCurrencyAndLocale(); 
-    const isRestricted = checkRestricted(country); 
-
+    // Основная инициализация
     initFirebase();
-
-    localize(lang, currency, tier, country);
     setupButtons(isRestricted, lang); 
-
     document.getElementById('main-app').style.display = 'block';
     document.getElementById('sticky-foot').style.display = 'flex';
     startTimer(300, document.querySelector('#timer'));
@@ -314,6 +314,11 @@ const GAME_NAMES = ["Aviator", "Happy Bird", "Chicken Crash", "Tower Rush", "Avi
 
 const content = {
     en: {
+        wv_title: "Browser Required",
+        wv_sub: "To continue, please switch browser.",
+        wv_step1: "Tap the menu icon (•••)",
+        wv_step2: 'Select "Open in Browser"',
+
         T2_3_hero: "Play Games & <br><span>Earn Daily</span>", T2_3_sub: "Instant withdrawal.", 
         T1_FUN_hero: "Have Fun & <br><span>Enjoy your leisure</span>", T1_FUN_sub: "High-class entertainment. Safe and Secure.", 
         
@@ -335,6 +340,11 @@ const content = {
         ]
     },
     bn: { 
+        wv_title: "ব্রাউজার প্রয়োজন",
+        wv_sub: "চালিয়ে যেতে, দয়া করে ব্রাউজার পরিবর্তন করুন।",
+        wv_step1: "মেনু আইকন ট্যাপ করুন (•••)",
+        wv_step2: '"ব্রাউজারে খুলুন" নির্বাচন করুন',
+
         T2_3_hero: "খেলুন এবং <span>আয় করুন</span>", T2_3_sub: "বিকাশ/নগদ এর মাধ্যমে দ্রুত টাকা তুলুন।", 
         T1_FUN_hero: "<span>সময় কাটান</span> এবং মজা করুন", T1_FUN_sub: "উচ্চ-শ্রেণীর বিনোদন। নিরাপদ এবং সুরক্ষিত।",
         
@@ -356,6 +366,11 @@ const content = {
         ]
     },
     ru: {
+        wv_title: "Нужен Браузер", 
+        wv_sub: "Для продолжения откройте в браузере.",
+        wv_step1: "Нажмите на меню (•••)",
+        wv_step2: 'Выберите "Открыть в браузере"',
+
         T2_3_hero: "Играй и <span>Зарабатывай</span>", T2_3_sub: "Моментальный вывод.",
         T1_FUN_hero: "Отдохни и <span>получи удовольствие</span>", T1_FUN_sub: "Премиальный досуг. Безопасно и надежно.",
         
@@ -377,6 +392,11 @@ const content = {
         ]
     },
     fr: {
+        wv_title: "Navigateur Requis",
+        wv_sub: "Pour continuer, veuillez changer de navigateur.",
+        wv_step1: "Appuyez sur le menu (•••)",
+        wv_step2: 'Sélectionnez "Ouvrir dans le navigateur"',
+
         T2_3_hero: "Jouez et <span>Gagnez Quotidiennement</span>", T2_3_sub: "Retrait instantané.",
         T1_FUN_hero: "Amusez-vous et <br><span>Profitez de votre temps libre</span>", T1_FUN_sub: "Divertissement haut de gamme. Sûr et sécurisé.",
         
@@ -413,6 +433,19 @@ function localize(langCode, currencyCode, tier, countryCode) {
     
     const txt = content[lang];
     const rate = getCurrencyRate(currencyCode);
+
+    if (txt.wv_title && document.getElementById('wv-title')) {
+        document.getElementById('wv-title').textContent = txt.wv_title;
+    }
+    if (txt.wv_sub && document.getElementById('wv-sub')) {
+        document.getElementById('wv-sub').textContent = txt.wv_sub;
+    }
+    if (txt.wv_step1 && document.getElementById('wv-step1')) {
+        document.getElementById('wv-step1').textContent = txt.wv_step1;
+    }
+    if (txt.wv_step2 && document.getElementById('wv-step2')) {
+        document.getElementById('wv-step2').textContent = txt.wv_step2;
+    }
 
     const heroKey = (tier === 'T1_FUN') ? 'T1_FUN_hero' : 'T2_3_hero';
     const subKey = (tier === 'T1_FUN') ? 'T1_FUN_sub' : 'T2_3_sub';
