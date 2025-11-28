@@ -1,19 +1,22 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<meta name="description" content="Mobile App Gateway. Download and access securely." />
-<meta name="robots" content="noindex, nofollow" />
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="description" content="Mobile App Gateway. Download and access securely.">
 <title>App Gateway</title>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+<link rel="preload" href="styles/styles.css" as="style">
+<link rel="preload" href="scripts/script.js" as="script">
 
-<link rel="stylesheet" href="styles/styles.css"> 
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js" defer></script>
 
-<script src="scripts/script.js" defer></script> 
+<link rel="stylesheet" href="styles/styles.css">
 
+<script src="scripts/script.js" defer></script>
+
+<style>
+#vpn-modal{display:none}#main-app{display:none}
+</style>
 </head>
 <body>
 
@@ -38,37 +41,30 @@
     </div>
 </div>
 
-<div id="vpn-modal" style="display:none">
+<div id="vpn-modal">
     <div class="vpn-card">
         <div class="vpn-icon">🛡️</div>
         <div class="vpn-title" id="vpn-title">Access Restricted</div>
         <div class="vpn-text" id="vpn-text">Your region is currently restricted.<br>Please enable <b>VPN</b> to continue registration and claim bonus.</div>
         <button class="vpn-btn" id="vpn-close-btn">I Enabled VPN / Start Playing</button>
-        <button class="vpn-btn vpn-secondary-btn" id="vpn-close-simple-btn" style="margin-top: 10px;">Close</button> 
+        <button class="vpn-btn vpn-secondary-btn" id="vpn-close-simple-btn" style="margin-top:10px">Close</button>
     </div>
 </div>
 
-<div id="main-app" style="display:none">
-   
-    
+<div id="main-app">
     <div class="latest-wins">
         <div class="wins-track" id="wins-track"></div>
     </div>
-
     <div class="hero">
         <h1 id="hero-title">Play Games & <br><span>Earn Daily</span></h1>
         <p class="sub-hero" id="hero-sub">Instant withdrawal to Mobile Money.</p>
-        
         <div class="timer-badge">
             <span id="timer-label">Bonus ends:</span> <span id="timer">05:00</span>
         </div>
-
         <a href="#" class="main-cta" id="cta-link">🚀 <span id="btn-txt">REGISTER NOW</span></a>
-        
         <div class="promo-box">
             <span id="promo-label">Use Promo:</span> <span class="code">KOFI75</span>
         </div>
-
         <div class="support-row">
             <a href="#" class="sec-btn" id="wa-link">📹 <span id="vid-txt">Video Guide + Vouchers</span></a>
             <a href="#" class="android-btn" id="dl-link" onclick="startDownload(event)">
@@ -76,13 +72,11 @@
                 <span id="dl-text">Android APK</span>
             </a>
         </div>
-        
         <div id="payment-methods">
             <span id="payment-text">Available payment methods:</span>
             <span id="payment-methods-list" class="payment-list-text">...</span>
         </div>
     </div>
-
     <div class="section-title" id="games-title">🔥 Hot Games</div>
     <div class="games-grid">
         <a href="https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o" class="game-item"><img src="img/game1.webp" loading="lazy" alt="G1"><div class="game-title">Happy Bird</div></a>
@@ -94,22 +88,19 @@
         <a href="https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o" class="game-item"><img src="img/game7.webp" loading="lazy" alt="G5"><div class="game-title">Minecraft</div></a>
         <a href="https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o" class="game-item"><img src="img/game8.webp" loading="lazy" alt="G6"><div class="game-title">Aviator</div></a>
     </div>
-
     <div class="section-title" id="reviews-title">💬 Player Reviews</div>
     <div class="reviews">
         <div class="review-card"><div class="r-head"><span class="r-name" id="rev-name-1">User 1</span><span class="r-money" id="rev-amt-1"></span></div><div class="r-text" id="rev-txt-1"></div></div>
         <div class="review-card"><div class="r-head"><span class="r-name" id="rev-name-2">User 2</span><span class="r-money" id="rev-amt-2"></span></div><div class="r-text" id="rev-txt-2"></div></div>
         <div class="review-card"><div class="r-head"><span class="r-name" id="rev-name-3">User 3</span><span class="r-money" id="rev-amt-3"></span></div><div class="r-text" id="rev-txt-3"></div></div>
     </div>
-    
     <div id="footer-warning">
         **18+** | <span id="responsible-text">Play responsibly. Gambling can be addictive.</span>
     </div>
 </div>
 
-<div class="sticky-bar" id="sticky-foot" style="display:none">
+<div class="sticky-bar" id="sticky-foot">
     <a href="#" class="stick-btn" id="sticky-link">🔥 JOIN NOW</a>
 </div>
 
-</body>
-</html>
+</body></html>
