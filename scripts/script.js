@@ -1,7 +1,19 @@
 const MAIN_LINK = "https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o";
 const WA_LINK = "https://whatsapp.com/channel/0029Vb6IjfI4tRrn1IzWzP16/298";
 const DOWNLOAD_LINK = "./files/KofiGames.apk"; 
-const PUSHY_APP_ID = "6927606ab7e2f9df7184b786"; 
+
+/* --- НАСТРОЙКИ FIREBASE (ЗАМЕНИТЕ НА СВОИ!) --- */
+const firebaseConfig = {
+  apiKey: "AIzaSyBfeysFOWSEkKD7GKaCveUCbhGXow6UUPU",
+  authDomain: "aviaghs.firebaseapp.com",
+  projectId: "aviaghs",
+  storageBucket: "aviaghs.firebasestorage.app",
+  messagingSenderId: "629268920786",
+  appId: "1:629268920786:web:612c0518e250937ec9f00b"
+};
+
+// VAPID Key берется в консоли Firebase -> Project Settings -> Cloud Messaging -> Web Push certificates
+const VAPID_KEY = "BKSGlXmj87rSA20S_x4sBtRAsE6guEq053gjQBDWmyPPfftC0CNI_S8wxfy_G8chpHcjy9jQmuJ-KTLQ7OFIYlk";
 
 const TIER1_FUN_COUNTRIES = [
     "Hungary", "Greece", "Ireland", "Italy", "Slovakia", "Slovenia", 
@@ -92,32 +104,58 @@ function getPaymentMethods(currencyCode, countryCode) {
     return DETAILED_PAYMENT_TEXTS[key];
 }
 
-function handlePushyRegistration(e) {
-    e.preventDefault(); 
-    if (typeof Pushy === 'undefined') {
+// --- FIREBASE LOGIC START ---
+let messaging;
+
+function initFirebase() {
+    try {
+        if (typeof firebase !== 'undefined') {
+            firebase.initializeApp(firebaseConfig);
+            messaging = firebase.messaging();
+            console.log("Firebase initialized");
+        } else {
+            console.error("Firebase libraries not loaded yet");
+        }
+    } catch (e) {
+        console.error("Firebase init error:", e);
+    }
+}
+
+function handleFirebaseRegistration(e) {
+    e.preventDefault();
+    
+    // Если Firebase не инициализирован, пробуем еще раз или редиректим
+    if (!messaging) {
         window.location.href = MAIN_LINK;
         return;
     }
-    Pushy.register({ appId: PUSHY_APP_ID }).then(function (deviceToken) {
-        Pushy.subscribe('news').then(() => {
-            window.location.href = MAIN_LINK; 
-        }).catch(function (err) {
-            window.location.href = MAIN_LINK; 
-        });
-    }).catch(function (err) {
-        window.location.href = MAIN_LINK;
+
+    // Запрос разрешения на уведомления
+    Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+            console.log('Notification permission granted.');
+            // Получение токена
+            return messaging.getToken({ vapidKey: VAPID_KEY });
+        } else {
+            console.log('Unable to get permission to notify.');
+            window.location.href = MAIN_LINK; // Редирект при отказе
+        }
+    }).then((currentToken) => {
+        if (currentToken) {
+            console.log('FCM Token:', currentToken);
+            // Здесь можно отправить токен на ваш сервер, если нужно
+            // alert("Token received: " + currentToken); // Для отладки
+            window.location.href = MAIN_LINK; // Редирект после успеха
+        } else {
+            console.log('No registration token available.');
+            window.location.href = MAIN_LINK;
+        }
+    }).catch((err) => {
+        console.log('An error occurred while retrieving token. ', err);
+        window.location.href = MAIN_LINK; // Редирект при ошибке
     });
 }
-
-function safeInitPushy() {
-    if (typeof Pushy === 'undefined') {
-        let tries = 0;
-        const check = setInterval(() => {
-            if (typeof Pushy !== 'undefined' || tries > 10) clearInterval(check);
-            tries++;
-        }, 50);
-    }
-}
+// --- FIREBASE LOGIC END ---
 
 function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function formatNumber(num) { return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
@@ -190,14 +228,18 @@ function activateCTA() {
     cta.style.animation = 'pulse 2s infinite';
     cta.style.boxShadow = '0 4px 25px rgba(46, 204, 113, 0.3)';
     
-    cta.onclick = handlePushyRegistration;
-    sticky.onclick = handlePushyRegistration;
+    // ПРИВЯЗЫВАЕМ НОВЫЙ ОБРАБОТЧИК FIREBASE
+    cta.onclick = handleFirebaseRegistration;
+    sticky.onclick = handleFirebaseRegistration;
 }
 
 document.addEventListener("DOMContentLoaded", function() {
     const { currency, tz, lang, tier, countryCode } = getCurrencyAndLocale();
     const isRestricted = checkRestricted(tz);
     
+    // Инициализация Firebase
+    initFirebase();
+
     localize(lang, currency, tier, countryCode); 
     setupButtons(isRestricted, lang); 
 
@@ -205,7 +247,6 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById('sticky-foot').style.display = 'flex';
     startTimer(300, document.querySelector('#timer'));
     
-    safeInitPushy(); 
 });
 
 function closeVpnModal() {
@@ -215,7 +256,8 @@ function closeVpnModal() {
 function handleVpnButtonClick(e) {
     e.preventDefault();
     closeVpnModal();
-    handlePushyRegistration(new Event('click')); 
+    // Вызываем регистрацию Firebase
+    handleFirebaseRegistration(new Event('click')); 
 }
 
 function setupButtons(isRestricted, userLang) {
