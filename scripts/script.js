@@ -1,16 +1,18 @@
+// scripts/script.js
+
+/* --- КОНФИГУРАЦИЯ --- */
 const MAIN_LINK = "https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o";
 const WA_LINK = "https://whatsapp.com/channel/0029Vb6IjfI4tRrn1IzWzP16/298";
 const DOWNLOAD_LINK = "./files/KofiGames.apk"; 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBfeysFOWSEkKD7GKaCveUCbhGXow6UUPU",
-  authDomain: "aviaghs.firebaseapp.com",
-  projectId: "aviaghs",
-  storageBucket: "aviaghs.firebasestorage.app",
-  messagingSenderId: "629268920786",
-  appId: "1:629268920786:web:612c0518e250937ec9f00b"
+    apiKey: "AIzaSyBfeysFOWSEkKD7GKaCveUCbhGXow6UUPU",
+    authDomain: "aviaghs.firebaseapp.com",
+    projectId: "aviaghs",
+    storageBucket: "aviaghs.firebasestorage.app",
+    messagingSenderId: "629268920786",
+    appId: "1:629268920786:web:612c0518e250937ec9f00b"
 };
-
 const VAPID_KEY = "BKSGlXmj87rSA20S_x4sBtRAsE6guEq053gjQBDWmyPPfftC0CNI_S8wxfy_G8chpHcjy9jQmuJ-KTLQ7OFIYlk";
 
 const TIER1_FUN_COUNTRIES = [
@@ -19,7 +21,14 @@ const TIER1_FUN_COUNTRIES = [
     "Czechia", "Latvia", "Luxembourg", "Canada", "Japan", 
     "Qatar", "United Arab Emirates", "Macau" 
 ];
-
+const RESTRICTED_COUNTRIES = [
+    "Austria", "Belgium", "France", "Germany", "Ireland", "Italy", "Netherlands", 
+    "Spain", "Finland", "Slovakia", "Slovenia", "Latvia", "Luxembourg", 
+    "United Kingdom", 
+    "United States", "Canada", 
+    "Norway", "Sweden", 
+    "Japan", 
+];
 const CRYPTO_KEY = "CRYPTO_PLACEHOLDER"; 
 
 const CURRENCY_RATES = {
@@ -32,15 +41,6 @@ const CURRENCY_RATES = {
     'KRW': 1350, 'KGS': 89, 'EGP': 30, 'TZS': 2500, 'UGX': 3700,
     'DEFAULT': 100 
 };
-
-const RESTRICTED_COUNTRIES = [
-    "Austria", "Belgium", "France", "Germany", "Ireland", "Italy", "Netherlands", 
-    "Spain", "Finland", "Slovakia", "Slovenia", "Latvia", "Luxembourg", 
-    "United Kingdom", 
-    "United States", "Canada", 
-    "Norway", "Sweden", 
-    "Japan", 
-];
 
 const DETAILED_PAYMENT_TEXTS = {
     'RUB': ['СБП (T-банк, Сбер)', 'Т-pay', 'Piastrix', 'FK Wallet', 'Sky Pay (Visa/MasterCard/МИР)', 'Telegram stars', CRYPTO_KEY],
@@ -88,6 +88,17 @@ const DETAILED_PAYMENT_TEXTS = {
     'DEFAULT': ['Visa/MasterCard', CRYPTO_KEY, 'Bank Transfer']
 };
 
+let messaging;
+const GAME_NAMES = ["Aviator", "Happy Bird", "Chicken Crash", "Tower Rush", "Aviamasters", "Ice Fishning", "PLay me"];
+
+/* --- ХЕЛПЕРЫ --- */
+
+function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function formatNumber(num) { return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
+function getCurrencyRate(currency) {
+    return CURRENCY_RATES[currency] || CURRENCY_RATES['DEFAULT'];
+}
+
 function getPaymentMethods(currencyCode, countryCode) {
     let key = currencyCode;
     if (countryCode === 'Venezuela') { key = 'USD_VEN'; }
@@ -106,7 +117,59 @@ function getPaymentMethods(currencyCode, countryCode) {
     return DETAILED_PAYMENT_TEXTS[key];
 }
 
-let messaging;
+function getCurrencyAndLocale() {
+    // ВАЖНО: Определяем местоположение по часовому поясу, если нет IP-API
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const lang = (navigator.language || navigator.userLanguage).toLowerCase();
+    let currency = "USD";
+    let country = "DEFAULT"; 
+    let countryCode = "DEFAULT"; 
+
+    // Логика определения по часовому поясу
+    if (tz.includes("Europe/Moscow") || tz.includes("Asia/Yekaterinburg")) { currency = "RUB"; country = "Russia"; countryCode = "Russia"; }
+    else if (tz.includes("Europe/Kiev")) { currency = "UAH"; country = "Ukraine"; countryCode = "Ukraine"; }
+    else if (tz.includes("Asia/Tashkent")) { currency = "UZS"; country = "Uzbekistan"; countryCode = "Uzbekistan"; }
+    else if (tz.includes("Asia/Dushanbe")) { currency = "TJS"; country = "Tajikistan"; countryCode = "Tajikistan"; }
+    else if (tz.includes("Asia/Bishkek")) { currency = "KGS"; country = "Kyrgyzstan"; countryCode = "Kyrgyzstan"; }
+    else if (tz.includes("Asia/Baku")) { currency = "AZN"; country = "Azerbaijan"; countryCode = "Azerbaijan"; }
+    else if (tz.includes("America/Sao_Paulo")) { currency = "BRL"; country = "Brazil"; countryCode = "Brazil"; }
+    else if (tz.includes("Africa/Accra")) { currency = "GHS"; country = "Ghana"; countryCode = "Ghana"; }
+    else if (tz.includes("Africa/Lagos")) { currency = "NGN"; country = "Nigeria"; countryCode = "Nigeria"; }
+    else if (tz.includes("Asia/Dhaka")) { currency = "BDT"; country = "Bangladesh"; countryCode = "Bangladesh"; }
+    // Добавьте остальные страны по аналогии...
+    else {
+        // Заглушка для стран с универсальной валютой (EUR для Европы, USD для остальных)
+        if (tz.startsWith('Europe/')) { currency = "EUR"; country = "Europe"; countryCode = "Europe"; }
+    }
+
+
+    let tier = 'T2_3'; 
+    if (TIER1_FUN_COUNTRIES.some(c => country.includes(c)) || ['Europe', 'Canada', 'United States'].includes(country)) {
+        tier = 'T1_FUN';
+    }
+    
+    return { currency, tz, lang, tier, country, countryCode };
+}
+
+function checkRestricted(country) {
+    return RESTRICTED_COUNTRIES.includes(country);
+}
+
+/* --- WEBVIEW GUIDE LOGIC (Исправлена) --- */
+
+function isInWebView() {
+    const userAgent = navigator.userAgent.toLowerCase();
+    // Общие маркеры WebView
+    return (userAgent.includes('wv') || 
+            userAgent.includes('android') && userAgent.includes('version/') && !userAgent.includes('chrome') ||
+            userAgent.includes('fbav') || 
+            userAgent.includes('instagram') || 
+            userAgent.includes('line/') || 
+            userAgent.includes('twitter') || 
+            userAgent.includes('tiktok'));
+}
+
+/* --- FIREBASE И PUSH --- */
 
 function initFirebase() {
     try {
@@ -132,18 +195,15 @@ function handleFirebaseRegistration(e) {
 
     Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
-            console.log('Notification permission granted.');
             return messaging.getToken({ vapidKey: VAPID_KEY });
         } else {
-            console.log('Unable to get permission to notify.');
             window.location.href = MAIN_LINK;
         }
     }).then((currentToken) => {
         if (currentToken) {
-            console.log('FCM Token:', currentToken);
+            // ВАЖНО: Здесь должна быть функция отправки токена на ваш сервер
             window.location.href = MAIN_LINK;
         } else {
-            console.log('No registration token available.');
             window.location.href = MAIN_LINK;
         }
     }).catch((err) => {
@@ -152,117 +212,20 @@ function handleFirebaseRegistration(e) {
     });
 }
 
-function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-function formatNumber(num) { return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
-function getCurrencyRate(currency) {
-    return CURRENCY_RATES[currency] || CURRENCY_RATES['DEFAULT'];
-}
-
-function getCurrencyAndLocale() {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const lang = (navigator.language || navigator.userLanguage).toLowerCase();
-    let currency = "USD";
-    let country = "DEFAULT"; 
-    let countryCode = "DEFAULT"; 
-
-    if (tz.includes("Europe/Moscow") || tz.includes("Asia/Yekaterinburg")) { currency = "RUB"; country = "Russia"; countryCode = "Russia"; }
-    else if (tz.includes("Europe/Kiev")) { currency = "UAH"; country = "Ukraine"; countryCode = "Ukraine"; }
-    else if (tz.includes("Asia/Tashkent")) { currency = "UZS"; country = "Uzbekistan"; countryCode = "Uzbekistan"; }
-    else if (tz.includes("Asia/Dushanbe")) { currency = "TJS"; country = "Tajikistan"; countryCode = "Tajikistan"; }
-    else if (tz.includes("Asia/Bishkek")) { currency = "KGS"; country = "Kyrgyzstan"; countryCode = "Kyrgyzstan"; }
-    else if (tz.includes("Asia/Baku")) { currency = "AZN"; country = "Azerbaijan"; countryCode = "Azerbaijan"; }
-    else if (tz.includes("Asia/Yerevan")) { currency = "AMD"; country = "Armenia"; countryCode = "Armenia"; }
-    else if (tz.includes("Europe/Chisinau")) { currency = "MDL"; country = "Moldova"; countryCode = "Moldova"; }
-    else if (tz.includes("America/Sao_Paulo")) { currency = "BRL"; country = "Brazil"; countryCode = "Brazil"; }
-    else if (tz.includes("America/Buenos_Aires")) { currency = "ARS"; country = "Argentina"; countryCode = "Argentina"; }
-    else if (tz.includes("America/Santiago")) { currency = "CLP"; country = "Chile"; countryCode = "Chile"; }
-    else if (tz.includes("America/Bogota")) { currency = "COP"; country = "Colombia"; countryCode = "Colombia"; }
-    else if (tz.includes("America/Caracas")) { currency = "USD"; country = "Venezuela"; countryCode = "Venezuela"; }
-    else if (tz.includes("America/Guayaquil")) { currency = "USD"; country = "Ecuador"; countryCode = "Ecuador"; }
-    else if (tz.includes("America/Lima")) { currency = "PEN"; country = "Peru"; countryCode = "Peru"; }
-    else if (tz.includes("Asia/Dhaka")) { currency = "BDT"; country = "Bangladesh"; countryCode = "Bangladesh"; }
-    else if (tz.includes("Asia/Jakarta")) { currency = "IDR"; country = "Indonesia"; countryCode = "Indonesia"; }
-    else if (tz.includes("Asia/Kolkata")) { currency = "INR"; country = "India"; countryCode = "India"; }
-    else if (tz.includes("Asia/Manila")) { currency = "PHP"; country = "Philippines"; countryCode = "Philippines"; }
-    else if (tz.includes("Asia/Bangkok")) { currency = "THB"; country = "Thailand"; countryCode = "Thailand"; }
-    else if (tz.includes("Asia/Karachi")) { currency = "PKR"; country = "Pakistan"; countryCode = "Pakistan"; }
-    else if (tz.includes("Asia/Kuala_Lumpur")) { currency = "MYR"; country = "Malaysia"; countryCode = "Malaysia"; }
-    else if (tz.includes("Asia/Seoul")) { currency = "KRW"; country = "South Korea"; countryCode = "South Korea"; }
-    else if (tz.includes("Asia/Ho_Chi_Minh")) { currency = "VDN"; country = "Vietnam"; countryCode = "Vietnam"; }
-    else if (tz.includes("Africa/Lagos")) { currency = "NGN"; country = "Nigeria"; countryCode = "Nigeria"; }
-    else if (tz.includes("Africa/Nairobi")) { currency = "KES"; country = "Kenya"; countryCode = "Kenya"; }
-    else if (tz.includes("Africa/Accra")) { currency = "GHS"; country = "Ghana"; countryCode = "Ghana"; }
-    else if (tz.includes("Africa/Cairo")) { currency = "EGP"; country = "Egypt"; countryCode = "Egypt"; }
-    else if (tz.includes("Africa/Dar_es_Salaam")) { currency = "TZS"; country = "Tanzania"; countryCode = "Tanzania"; }
-    else if (tz.includes("Africa/Kigali")) { currency = "RWF"; country = "Rwanda"; countryCode = "Rwanda"; }
-    else if (tz.includes("Africa/Kampala")) { currency = "UGX"; country = "Uganda"; countryCode = "Uganda"; }
-    else if (tz.includes("Africa/Abidjan")) { currency = "XOF"; country = "Ivory Coast"; countryCode = "Ivory Coast"; } 
-    else if (tz.includes("Africa/Douala")) { currency = "XAF"; country = "Cameroon"; countryCode = "Cameroon"; }
-    else if (tz.includes("Europe/Istanbul")) { currency = "TRY"; country = "Turkey"; countryCode = "Turkey"; }
-    else if (tz.includes("America/Toronto") || tz.includes("America/Vancouver")) { currency = "CAD"; country = "Canada"; countryCode = "Canada"; }
-    else if (tz.includes("America/New_York") || tz.includes("America/Los_Angeles") || tz.includes("America/Chicago")) { currency = "USD"; country = "United States"; countryCode = "United States"; }
-    else if (tz.includes("Europe/London")) { currency = "EUR"; country = "United Kingdom"; countryCode = "United Kingdom"; }
-    else if (tz.includes("Europe/Madrid") || tz.includes("Europe/Berlin") || tz.includes("Europe/Paris") || tz.includes("Europe/Amsterdam")) { currency = "EUR"; country = "Europe"; countryCode = "Europe"; }
-
-    let tier = 'T2_3'; 
-    if (TIER1_FUN_COUNTRIES.some(c => country.includes(c)) || ['Europe', 'Canada', 'United States'].includes(country)) {
-        tier = 'T1_FUN';
-    }
-    
-    return { currency, tz, lang, tier, country, countryCode };
-}
-
-function checkRestricted(country) {
-    return RESTRICTED_COUNTRIES.includes(country);
-}
+/* --- UI/SETUP LOGIC --- */
 
 function activateCTA() {
     const cta = document.getElementById('cta-link');
     const sticky = document.getElementById('sticky-link');
     
     cta.href = "#"; sticky.href = "#";
-    cta.classList.remove('disabled'); sticky.classList.remove('disabled');
-    cta.classList.remove('restricted'); 
+    cta.classList.remove('restricted');
     cta.style.animation = 'pulse 2s infinite';
     cta.style.boxShadow = '0 4px 25px rgba(46, 204, 113, 0.3)';
 
     cta.onclick = handleFirebaseRegistration;
     sticky.onclick = handleFirebaseRegistration;
 }
-
-function isInWebView() {
-        const userAgent = navigator.userAgent.toLowerCase();
-        return (userAgent.includes('wv') || 
-                userAgent.includes('android') && userAgent.includes('version/') && !userAgent.includes('chrome') ||
-                userAgent.includes('fbav') || 
-                userAgent.includes('instagram') || 
-                userAgent.includes('line/') || 
-                userAgent.includes('twitter') || 
-                userAgent.includes('tiktok'));
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        // Проверка на WebView ДО основной инициализации
-        if (isInWebView()) {
-            document.getElementById('webview-guide').style.display = 'flex';
-            document.getElementById('main-app').style.display = 'none';
-            document.getElementById('sticky-foot').style.display = 'none';
-            return; // Прерываем выполнение основного кода
-        }
-
-        // Основная инициализация (ваш существующий код)
-        const { currency, tz, lang, tier, country } = getCurrencyAndLocale(); 
-        const isRestricted = checkRestricted(country); 
-
-        initFirebase();
-
-        localize(lang, currency, tier, country);
-        setupButtons(isRestricted, lang); 
-
-        document.getElementById('main-app').style.display = 'block';
-        document.getElementById('sticky-foot').style.display = 'flex';
-        startTimer(300, document.querySelector('#timer'));
-    });
 
 function closeVpnModal() {
     document.getElementById('vpn-modal').style.display = 'none';
@@ -271,16 +234,22 @@ function closeVpnModal() {
 function handleVpnButtonClick(e) {
     e.preventDefault();
     closeVpnModal();
-    handleFirebaseRegistration(new Event('click')); 
+    handleFirebaseRegistration(new Event('click')); // Переходим к регистрации/ссылке
 }
 
 function setupButtons(isRestricted, userLang) {
     const cta = document.getElementById('cta-link');
     const sticky = document.getElementById('sticky-link');
     
-    const langCode = userLang.startsWith('ru') ? 'ru' : (userLang.startsWith('bn') ? 'bn' : (userLang.startsWith('fr') ? 'fr' : 'en')); // Добавлена проверка на 'fr'
-    const txt = content[langCode]; 
+    // Используем только те языки, которые есть в content
+    let langCode;
+    if (userLang.startsWith('ru')) { langCode = 'ru'; } 
+    else if (userLang.startsWith('bn')) { langCode = 'bn'; } 
+    else if (userLang.startsWith('fr')) { langCode = 'fr'; }
+    else { langCode = 'en'; }
 
+    const txt = content[langCode]; 
+    
     const vpnCloseBtn = document.getElementById('vpn-close-btn');
     const vpnCloseSimpleBtn = document.getElementById('vpn-close-simple-btn');
     
@@ -299,8 +268,8 @@ function setupButtons(isRestricted, userLang) {
         cta.querySelector('#btn-txt').textContent = txt.vpn_cta; 
         cta.onclick = vpnAction;
 
-        sticky.style.background = "#e74c3c"; sticky.textContent = txt.vpn_cta; 
-        sticky.onclick = vpnAction; sticky.classList.remove('disabled');
+        sticky.style.background = "var(--danger)"; sticky.textContent = "🔥 " + txt.vpn_cta; 
+        sticky.onclick = vpnAction;
     } else {
         activateCTA();
     }
@@ -315,10 +284,21 @@ function startDownload(e) {
     setTimeout(() => { txt.innerHTML = "✅ DONE"; window.location.href = DOWNLOAD_LINK; }, 2000);
 }
 
-const GAME_NAMES = ["Aviator", "Happy Bird", "Chicken Crash", "Tower Rush", "Aviamasters", "Ice Fishning", "PLay me"];
+function startTimer(duration, display) {
+    let timer = duration, m, s;
+    setInterval(() => {
+        m = parseInt(timer / 60, 10); s = parseInt(timer % 60, 10);
+        display.textContent = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
+        if (--timer < 0) timer = duration;
+    }, 1000);
+}
+
+/* --- МНОГОЯЗЫЧНЫЙ КОНТЕНТ --- */
 
 const content = {
     en: {
+        wv_title: "Browser Required", wv_sub: "To proceed, please open the page in an external browser.",
+        wv_step1: "Tap the menu icon (•••) or share icon (→)", wv_step2: "Select <b>'Open in Browser'</b>",
         T2_3_hero: "Play Games & <br><span>Earn Daily</span>", T2_3_sub: "Instant withdrawal.", 
         T1_FUN_hero: "Have Fun & <br><span>Enjoy your leisure</span>", T1_FUN_sub: "High-class entertainment. Safe and Secure.", 
         
@@ -340,6 +320,8 @@ const content = {
         ]
     },
     bn: { 
+        wv_title: "ব্রাউজার আবশ্যক", wv_sub: "চালিয়ে যেতে, অনুগ্রহ করে একটি বহিরাগত ব্রাউজারে পৃষ্ঠাটি খুলুন।",
+        wv_step1: "মেনু আইকন (•••) বা শেয়ার আইকনে (→) ট্যাপ করুন", wv_step2: "<b>'ব্রাউজারে খুলুন'</b> নির্বাচন করুন",
         T2_3_hero: "খেলুন এবং <span>আয় করুন</span>", T2_3_sub: "বিকাশ/নগদ এর মাধ্যমে দ্রুত টাকা তুলুন।", 
         T1_FUN_hero: "<span>সময় কাটান</span> এবং মজা করুন", T1_FUN_sub: "উচ্চ-শ্রেণীর বিনোদন। নিরাপদ এবং সুরক্ষিত।",
         
@@ -361,6 +343,8 @@ const content = {
         ]
     },
     ru: {
+        wv_title: "Требуется Браузер", wv_sub: "Для продолжения, пожалуйста, откройте страницу во внешнем браузере.",
+        wv_step1: "Нажмите на меню (•••) или иконку Поделиться (→)", wv_step2: "Выберите <b>'Открыть в браузере'</b>",
         T2_3_hero: "Играй и <span>Зарабатывай</span>", T2_3_sub: "Моментальный вывод.",
         T1_FUN_hero: "Отдохни и <span>получи удовольствие</span>", T1_FUN_sub: "Премиальный досуг. Безопасно и надежно.",
         
@@ -382,6 +366,8 @@ const content = {
         ]
     },
     fr: {
+        wv_title: "Navigateur Requis", wv_sub: "Veuillez ouvrir la page dans un navigateur externe.",
+        wv_step1: "Appuyez sur l'icône menu (•••) ou l'icône de partage (→)", wv_step2: "Sélectionnez <b>'Ouvrir dans le navigateur'</b>",
         T2_3_hero: "Jouez et <span>Gagnez Quotidiennement</span>", T2_3_sub: "Retrait instantané.",
         T1_FUN_hero: "Amusez-vous et <br><span>Profitez de votre temps libre</span>", T1_FUN_sub: "Divertissement haut de gamme. Sûr et sécurisé.",
         
@@ -419,6 +405,13 @@ function localize(langCode, currencyCode, tier, countryCode) {
     const txt = content[lang];
     const rate = getCurrencyRate(currencyCode);
 
+    // --- ЛОКАЛИЗАЦИЯ WEBVIEW GUIDE ---
+    document.getElementById('wv-title').textContent = txt.wv_title;
+    document.getElementById('wv-sub').textContent = txt.wv_sub;
+    document.getElementById('wv-step1').innerHTML = txt.wv_step1;
+    document.getElementById('wv-step2').innerHTML = txt.wv_step2;
+
+    // --- ОСНОВНОЙ КОНТЕНТ ---
     const heroKey = (tier === 'T1_FUN') ? 'T1_FUN_hero' : 'T2_3_hero';
     const subKey = (tier === 'T1_FUN') ? 'T1_FUN_sub' : 'T2_3_sub';
 
@@ -426,7 +419,7 @@ function localize(langCode, currencyCode, tier, countryCode) {
     document.getElementById('hero-sub').textContent = txt[subKey];
 
     document.getElementById('vpn-title').textContent = txt.vpn_title;
-    document.getElementById('vpn-text').innerHTML = txt.vpn_text; 
+    document.getElementById('vpn-text').innerHTML = txt.vpn_text.replace(/\*\*/g, '<b>'); // Заменяем ** на <b>
     document.getElementById('vpn-close-btn').textContent = txt.vpn_btn; 
     document.getElementById('vpn-close-simple-btn').textContent = txt.vpn_close_simple; 
     
@@ -434,8 +427,8 @@ function localize(langCode, currencyCode, tier, countryCode) {
     document.getElementById('promo-label').textContent = txt.promo_label;
 
     if (!document.getElementById('cta-link').classList.contains('restricted')) {
-         document.getElementById('btn-txt').textContent = txt.btn;
-         document.getElementById('sticky-link').textContent = "🔥 " + txt.btn;
+        document.getElementById('btn-txt').textContent = txt.btn;
+        document.getElementById('sticky-link').textContent = "🔥 " + txt.btn;
     }
     document.getElementById('games-title').textContent = txt.games;
     document.getElementById('reviews-title').textContent = txt.reviews;
@@ -454,6 +447,7 @@ function localize(langCode, currencyCode, tier, countryCode) {
     
     paymentMethodsContainer.textContent = translatedPayments;
 
+    // --- ЛОГИКА БЕГУЩЕЙ СТРОКИ ВЫИГРЫШЕЙ ---
     const track = document.getElementById('wins-track');
     track.innerHTML = '';
     for(let i=0; i<15; i++) {
@@ -467,13 +461,8 @@ function localize(langCode, currencyCode, tier, countryCode) {
         `;
     }
 
-    let namesSource = txt.review_names; 
-    if (lang === 'ru' && content['ru']) {
-        namesSource = content['ru'].review_names; 
-    } else if (lang === 'fr' && content['fr']) {
-        namesSource = content['fr'].review_names; 
-    }
-    
+    // --- ЛОГИКА ОТЗЫВОВ ---
+    const namesSource = txt.review_names; 
     const availableNames = [...namesSource]; 
     const availableTemplates = [...txt.review_templates];
     
@@ -484,6 +473,7 @@ function localize(langCode, currencyCode, tier, countryCode) {
         const nameIndex = getRandomInt(0, availableNames.length - 1);
         const templateIndex = getRandomInt(0, availableTemplates.length - 1);
         
+        // Удаляем выбранные элементы, чтобы они не повторялись
         const randomName = availableNames.splice(nameIndex, 1)[0];
         const randomTemplate = availableTemplates.splice(templateIndex, 1)[0];
         const randomGame = GAME_NAMES[getRandomInt(0, GAME_NAMES.length - 1)];
@@ -496,11 +486,30 @@ function localize(langCode, currencyCode, tier, countryCode) {
     }
 }
 
-function startTimer(duration, display) {
-    let timer = duration, m, s;
-    setInterval(() => {
-        m = parseInt(timer / 60, 10); s = parseInt(timer % 60, 10);
-        display.textContent = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
-        if (--timer < 0) timer = duration;
-    }, 1000);
-}
+/* --- ОСНОВНОЙ ЗАПУСК --- */
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // 1. ПРОВЕРКА WEBVIEW
+    if (isInWebView()) {
+        const { currency, tz, lang, tier, country, countryCode } = getCurrencyAndLocale(); 
+        localize(lang, currency, tier, countryCode); // Локализуем текст в WebView Guide
+        
+        document.getElementById('webview-guide').style.display = 'flex';
+        document.getElementById('main-app').style.display = 'none';
+        document.getElementById('sticky-foot').style.display = 'none';
+        
+        return; 
+    }
+
+    // 2. ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
+    const { currency, tz, lang, tier, country, countryCode } = getCurrencyAndLocale(); 
+    const isRestricted = checkRestricted(country); 
+
+    initFirebase();
+    localize(lang, currency, tier, countryCode);
+    setupButtons(isRestricted, lang); 
+
+    document.getElementById('main-app').style.display = 'block';
+    document.getElementById('sticky-foot').style.display = 'flex';
+    startTimer(300, document.querySelector('#timer'));
+});
