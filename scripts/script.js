@@ -230,21 +230,39 @@ function activateCTA() {
     sticky.onclick = handleFirebaseRegistration;
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    const { currency, tz, lang, tier, country } = getCurrencyAndLocale(); 
+function isInWebView() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        return (userAgent.includes('wv') || 
+                userAgent.includes('android') && userAgent.includes('version/') && !userAgent.includes('chrome') ||
+                userAgent.includes('fbav') || 
+                userAgent.includes('instagram') || 
+                userAgent.includes('line/') || 
+                userAgent.includes('twitter') || 
+                userAgent.includes('tiktok'));
+    }
 
-    const isRestricted = checkRestricted(country); 
+    document.addEventListener("DOMContentLoaded", function() {
+        // Проверка на WebView ДО основной инициализации
+        if (isInWebView()) {
+            document.getElementById('webview-guide').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('sticky-foot').style.display = 'none';
+            return; // Прерываем выполнение основного кода
+        }
 
-    initFirebase();
+        // Основная инициализация (ваш существующий код)
+        const { currency, tz, lang, tier, country } = getCurrencyAndLocale(); 
+        const isRestricted = checkRestricted(country); 
 
-    localize(lang, currency, tier, country);
-    setupButtons(isRestricted, lang); 
+        initFirebase();
 
-    document.getElementById('main-app').style.display = 'block';
-    document.getElementById('sticky-foot').style.display = 'flex';
-    startTimer(300, document.querySelector('#timer'));
-    
-});
+        localize(lang, currency, tier, country);
+        setupButtons(isRestricted, lang); 
+
+        document.getElementById('main-app').style.display = 'block';
+        document.getElementById('sticky-foot').style.display = 'flex';
+        startTimer(300, document.querySelector('#timer'));
+    });
 
 function closeVpnModal() {
     document.getElementById('vpn-modal').style.display = 'none';
