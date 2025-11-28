@@ -2,7 +2,6 @@ const MAIN_LINK = "https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o";
 const WA_LINK = "https://whatsapp.com/channel/0029Vb6IjfI4tRrn1IzWzP16/298";
 const DOWNLOAD_LINK = "./files/KofiGames.apk"; 
 
-/* --- НАСТРОЙКИ FIREBASE (ЗАМЕНИТЕ НА СВОИ!) --- */
 const firebaseConfig = {
   apiKey: "AIzaSyBfeysFOWSEkKD7GKaCveUCbhGXow6UUPU",
   authDomain: "aviaghs.firebaseapp.com",
@@ -12,7 +11,6 @@ const firebaseConfig = {
   appId: "1:629268920786:web:612c0518e250937ec9f00b"
 };
 
-// VAPID Key берется в консоли Firebase -> Project Settings -> Cloud Messaging -> Web Push certificates
 const VAPID_KEY = "BKSGlXmj87rSA20S_x4sBtRAsE6guEq053gjQBDWmyPPfftC0CNI_S8wxfy_G8chpHcjy9jQmuJ-KTLQ7OFIYlk";
 
 const TIER1_FUN_COUNTRIES = [
@@ -35,9 +33,13 @@ const CURRENCY_RATES = {
     'DEFAULT': 100 
 };
 
-const RESTRICTED_ZONES = [
-    "America/New_York", "America/Los_Angeles", "Europe/Madrid", "Europe/Vilnius", 
-    "Europe/Berlin", "Europe/London", "Europe/Paris", "Europe/Amsterdam"
+const RESTRICTED_COUNTRIES = [
+    "Austria", "Belgium", "France", "Germany", "Ireland", "Italy", "Netherlands", 
+    "Spain", "Finland", "Slovakia", "Slovenia", "Latvia", "Luxembourg", 
+    "United Kingdom", 
+    "United States", "Canada", 
+    "Norway", "Sweden", 
+    "Japan", 
 ];
 
 const DETAILED_PAYMENT_TEXTS = {
@@ -104,7 +106,6 @@ function getPaymentMethods(currencyCode, countryCode) {
     return DETAILED_PAYMENT_TEXTS[key];
 }
 
-// --- FIREBASE LOGIC START ---
 let messaging;
 
 function initFirebase() {
@@ -123,39 +124,33 @@ function initFirebase() {
 
 function handleFirebaseRegistration(e) {
     e.preventDefault();
-    
-    // Если Firebase не инициализирован, пробуем еще раз или редиректим
+
     if (!messaging) {
         window.location.href = MAIN_LINK;
         return;
     }
 
-    // Запрос разрешения на уведомления
     Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
             console.log('Notification permission granted.');
-            // Получение токена
             return messaging.getToken({ vapidKey: VAPID_KEY });
         } else {
             console.log('Unable to get permission to notify.');
-            window.location.href = MAIN_LINK; // Редирект при отказе
+            window.location.href = MAIN_LINK;
         }
     }).then((currentToken) => {
         if (currentToken) {
             console.log('FCM Token:', currentToken);
-            // Здесь можно отправить токен на ваш сервер, если нужно
-            // alert("Token received: " + currentToken); // Для отладки
-            window.location.href = MAIN_LINK; // Редирект после успеха
+            window.location.href = MAIN_LINK;
         } else {
             console.log('No registration token available.');
             window.location.href = MAIN_LINK;
         }
     }).catch((err) => {
         console.log('An error occurred while retrieving token. ', err);
-        window.location.href = MAIN_LINK; // Редирект при ошибке
+        window.location.href = MAIN_LINK;
     });
 }
-// --- FIREBASE LOGIC END ---
 
 function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function formatNumber(num) { return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
@@ -169,42 +164,45 @@ function getCurrencyAndLocale() {
     let currency = "USD";
     let country = "DEFAULT"; 
     let countryCode = "DEFAULT"; 
-    if (tz.includes("Europe/Moscow") || tz.includes("Asia/Yekaterinburg")) { currency = "RUB"; country = "Russia"; countryCode = "RUB"; }
-    else if (tz.includes("Europe/Kiev")) { currency = "UAH"; country = "Ukraine"; countryCode = "UAH"; }
-    else if (tz.includes("Asia/Tashkent")) { currency = "UZS"; country = "Uzbekistan"; countryCode = "UZS"; }
-    else if (tz.includes("Asia/Dushanbe")) { currency = "TJS"; country = "Tajikistan"; countryCode = "TJS"; }
-    else if (tz.includes("Asia/Bishkek")) { currency = "KGS"; country = "Kyrgyzstan"; countryCode = "KGS"; }
-    else if (tz.includes("Asia/Baku")) { currency = "AZN"; country = "Azerbaijan"; countryCode = "AZN"; }
-    else if (tz.includes("Asia/Yerevan")) { currency = "AMD"; country = "Armenia"; countryCode = "AMD"; }
-    else if (tz.includes("Europe/Chisinau")) { currency = "MDL"; country = "Moldova"; countryCode = "MDL"; }
-    else if (tz.includes("America/Sao_Paulo")) { currency = "BRL"; country = "Brazil"; countryCode = "BRL"; }
-    else if (tz.includes("America/Buenos_Aires")) { currency = "ARS"; country = "Argentina"; countryCode = "ARS"; }
-    else if (tz.includes("America/Santiago")) { currency = "CLP"; country = "Chile"; countryCode = "CLP"; }
-    else if (tz.includes("America/Bogota")) { currency = "COP"; country = "Colombia"; countryCode = "COP"; }
+
+    if (tz.includes("Europe/Moscow") || tz.includes("Asia/Yekaterinburg")) { currency = "RUB"; country = "Russia"; countryCode = "Russia"; }
+    else if (tz.includes("Europe/Kiev")) { currency = "UAH"; country = "Ukraine"; countryCode = "Ukraine"; }
+    else if (tz.includes("Asia/Tashkent")) { currency = "UZS"; country = "Uzbekistan"; countryCode = "Uzbekistan"; }
+    else if (tz.includes("Asia/Dushanbe")) { currency = "TJS"; country = "Tajikistan"; countryCode = "Tajikistan"; }
+    else if (tz.includes("Asia/Bishkek")) { currency = "KGS"; country = "Kyrgyzstan"; countryCode = "Kyrgyzstan"; }
+    else if (tz.includes("Asia/Baku")) { currency = "AZN"; country = "Azerbaijan"; countryCode = "Azerbaijan"; }
+    else if (tz.includes("Asia/Yerevan")) { currency = "AMD"; country = "Armenia"; countryCode = "Armenia"; }
+    else if (tz.includes("Europe/Chisinau")) { currency = "MDL"; country = "Moldova"; countryCode = "Moldova"; }
+    else if (tz.includes("America/Sao_Paulo")) { currency = "BRL"; country = "Brazil"; countryCode = "Brazil"; }
+    else if (tz.includes("America/Buenos_Aires")) { currency = "ARS"; country = "Argentina"; countryCode = "Argentina"; }
+    else if (tz.includes("America/Santiago")) { currency = "CLP"; country = "Chile"; countryCode = "Chile"; }
+    else if (tz.includes("America/Bogota")) { currency = "COP"; country = "Colombia"; countryCode = "Colombia"; }
     else if (tz.includes("America/Caracas")) { currency = "USD"; country = "Venezuela"; countryCode = "Venezuela"; }
     else if (tz.includes("America/Guayaquil")) { currency = "USD"; country = "Ecuador"; countryCode = "Ecuador"; }
-    else if (tz.includes("America/Lima")) { currency = "PEN"; country = "Peru"; countryCode = "PEN"; }
-    else if (tz.includes("Asia/Dhaka")) { currency = "BDT"; country = "Bangladesh"; countryCode = "BDT"; }
-    else if (tz.includes("Asia/Jakarta")) { currency = "IDR"; country = "Indonesia"; countryCode = "IDR"; }
-    else if (tz.includes("Asia/Kolkata")) { currency = "INR"; country = "India"; countryCode = "INR"; }
-    else if (tz.includes("Asia/Manila")) { currency = "PHP"; country = "Philippines"; countryCode = "PHP"; }
-    else if (tz.includes("Asia/Bangkok")) { currency = "THB"; country = "Thailand"; countryCode = "THB"; }
-    else if (tz.includes("Asia/Karachi")) { currency = "PKR"; country = "Pakistan"; countryCode = "PKR"; }
-    else if (tz.includes("Asia/Kuala_Lumpur")) { currency = "MYR"; country = "Malaysia"; countryCode = "MYR"; }
-    else if (tz.includes("Asia/Seoul")) { currency = "KRW"; country = "South Korea"; countryCode = "KRW"; }
-    else if (tz.includes("Asia/Ho_Chi_Minh")) { currency = "VDN"; country = "Vietnam"; countryCode = "VDN"; }
-    else if (tz.includes("Africa/Lagos")) { currency = "NGN"; country = "Nigeria"; countryCode = "NGN"; }
-    else if (tz.includes("Africa/Nairobi")) { currency = "KES"; country = "Kenya"; countryCode = "KES"; }
-    else if (tz.includes("Africa/Accra")) { currency = "GHS"; country = "Ghana"; countryCode = "GHS"; }
-    else if (tz.includes("Africa/Cairo")) { currency = "EGP"; country = "Egypt"; countryCode = "EGP"; }
-    else if (tz.includes("Africa/Dar_es_Salaam")) { currency = "TZS"; country = "Tanzania"; countryCode = "TZS"; }
-    else if (tz.includes("Africa/Kigali")) { currency = "RWF"; country = "Rwanda"; countryCode = "RWF"; }
-    else if (tz.includes("Africa/Kampala")) { currency = "UGX"; country = "Uganda"; countryCode = "UGX"; }
+    else if (tz.includes("America/Lima")) { currency = "PEN"; country = "Peru"; countryCode = "Peru"; }
+    else if (tz.includes("Asia/Dhaka")) { currency = "BDT"; country = "Bangladesh"; countryCode = "Bangladesh"; }
+    else if (tz.includes("Asia/Jakarta")) { currency = "IDR"; country = "Indonesia"; countryCode = "Indonesia"; }
+    else if (tz.includes("Asia/Kolkata")) { currency = "INR"; country = "India"; countryCode = "India"; }
+    else if (tz.includes("Asia/Manila")) { currency = "PHP"; country = "Philippines"; countryCode = "Philippines"; }
+    else if (tz.includes("Asia/Bangkok")) { currency = "THB"; country = "Thailand"; countryCode = "Thailand"; }
+    else if (tz.includes("Asia/Karachi")) { currency = "PKR"; country = "Pakistan"; countryCode = "Pakistan"; }
+    else if (tz.includes("Asia/Kuala_Lumpur")) { currency = "MYR"; country = "Malaysia"; countryCode = "Malaysia"; }
+    else if (tz.includes("Asia/Seoul")) { currency = "KRW"; country = "South Korea"; countryCode = "South Korea"; }
+    else if (tz.includes("Asia/Ho_Chi_Minh")) { currency = "VDN"; country = "Vietnam"; countryCode = "Vietnam"; }
+    else if (tz.includes("Africa/Lagos")) { currency = "NGN"; country = "Nigeria"; countryCode = "Nigeria"; }
+    else if (tz.includes("Africa/Nairobi")) { currency = "KES"; country = "Kenya"; countryCode = "Kenya"; }
+    else if (tz.includes("Africa/Accra")) { currency = "GHS"; country = "Ghana"; countryCode = "Ghana"; }
+    else if (tz.includes("Africa/Cairo")) { currency = "EGP"; country = "Egypt"; countryCode = "Egypt"; }
+    else if (tz.includes("Africa/Dar_es_Salaam")) { currency = "TZS"; country = "Tanzania"; countryCode = "Tanzania"; }
+    else if (tz.includes("Africa/Kigali")) { currency = "RWF"; country = "Rwanda"; countryCode = "Rwanda"; }
+    else if (tz.includes("Africa/Kampala")) { currency = "UGX"; country = "Uganda"; countryCode = "Uganda"; }
     else if (tz.includes("Africa/Abidjan")) { currency = "XOF"; country = "Ivory Coast"; countryCode = "Ivory Coast"; } 
     else if (tz.includes("Africa/Douala")) { currency = "XAF"; country = "Cameroon"; countryCode = "Cameroon"; }
-    else if (tz.includes("Europe/Istanbul")) { currency = "TRY"; country = "Turkey"; countryCode = "TRY"; }
-    else if (tz.includes("America/Toronto")) { currency = "CAD"; country = "Canada"; countryCode = "CAD"; }
-    else if (tz.includes("Europe/")) { currency = "EUR"; country = "Europe"; countryCode = "EUR"; }
+    else if (tz.includes("Europe/Istanbul")) { currency = "TRY"; country = "Turkey"; countryCode = "Turkey"; }
+    else if (tz.includes("America/Toronto") || tz.includes("America/Vancouver")) { currency = "CAD"; country = "Canada"; countryCode = "Canada"; }
+    else if (tz.includes("America/New_York") || tz.includes("America/Los_Angeles") || tz.includes("America/Chicago")) { currency = "USD"; country = "United States"; countryCode = "United States"; }
+    else if (tz.includes("Europe/London")) { currency = "EUR"; country = "United Kingdom"; countryCode = "United Kingdom"; }
+    else if (tz.includes("Europe/Madrid") || tz.includes("Europe/Berlin") || tz.includes("Europe/Paris") || tz.includes("Europe/Amsterdam")) { currency = "EUR"; country = "Europe"; countryCode = "Europe"; }
 
     let tier = 'T2_3'; 
     if (TIER1_FUN_COUNTRIES.some(c => country.includes(c)) || ['Europe', 'Canada', 'United States'].includes(country)) {
@@ -214,8 +212,8 @@ function getCurrencyAndLocale() {
     return { currency, tz, lang, tier, country, countryCode };
 }
 
-function checkRestricted(tz) {
-    return RESTRICTED_ZONES.some(zone => tz.includes(zone));
+function checkRestricted(country) {
+    return RESTRICTED_COUNTRIES.includes(country);
 }
 
 function activateCTA() {
@@ -227,20 +225,19 @@ function activateCTA() {
     cta.classList.remove('restricted'); 
     cta.style.animation = 'pulse 2s infinite';
     cta.style.boxShadow = '0 4px 25px rgba(46, 204, 113, 0.3)';
-    
-    // ПРИВЯЗЫВАЕМ НОВЫЙ ОБРАБОТЧИК FIREBASE
+
     cta.onclick = handleFirebaseRegistration;
     sticky.onclick = handleFirebaseRegistration;
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    const { currency, tz, lang, tier, countryCode } = getCurrencyAndLocale();
-    const isRestricted = checkRestricted(tz);
-    
-    // Инициализация Firebase
+    const { currency, tz, lang, tier, country } = getCurrencyAndLocale(); 
+
+    const isRestricted = checkRestricted(country); 
+
     initFirebase();
 
-    localize(lang, currency, tier, countryCode); 
+    localize(lang, currency, tier, country);
     setupButtons(isRestricted, lang); 
 
     document.getElementById('main-app').style.display = 'block';
@@ -256,7 +253,6 @@ function closeVpnModal() {
 function handleVpnButtonClick(e) {
     e.preventDefault();
     closeVpnModal();
-    // Вызываем регистрацию Firebase
     handleFirebaseRegistration(new Event('click')); 
 }
 
@@ -264,7 +260,7 @@ function setupButtons(isRestricted, userLang) {
     const cta = document.getElementById('cta-link');
     const sticky = document.getElementById('sticky-link');
     
-    const langCode = userLang.startsWith('ru') ? 'ru' : (userLang.startsWith('bn') ? 'bn' : 'en');
+    const langCode = userLang.startsWith('ru') ? 'ru' : (userLang.startsWith('bn') ? 'bn' : (userLang.startsWith('fr') ? 'fr' : 'en')); // Добавлена проверка на 'fr'
     const txt = content[langCode]; 
 
     const vpnCloseBtn = document.getElementById('vpn-close-btn');
@@ -309,7 +305,7 @@ const content = {
         T1_FUN_hero: "Have Fun & <br><span>Enjoy your leisure</span>", T1_FUN_sub: "High-class entertainment. Safe and Secure.", 
         
         btn: "REGISTER NOW", vpn_cta: "⚠️ VPN REQUIRED",
-        games: "🔥 Hot Games", reviews: "💬 Reviews", video: "Video Guide", download: "Android APK",
+        games: "🔥 Hot Games", reviews: "💬 Reviews", video: "Video Guide + free vouchers", download: "Android APK",
         vpn_title: "Access Restricted", vpn_text: "Your region is currently restricted.<br>Please enable **VPN** to continue registration and claim bonus.",
         vpn_btn: "I Enabled VPN / Start Playing", vpn_close_simple: "Close", 
         bonus_label: "Bonus ends:", promo_label: "Use Promo:",
@@ -351,7 +347,7 @@ const content = {
         T1_FUN_hero: "Отдохни и <span>получи удовольствие</span>", T1_FUN_sub: "Премиальный досуг. Безопасно и надежно.",
         
         btn: "РЕГИСТРАЦИЯ", vpn_cta: "⚠️ ТРЕБУЕТСЯ VPN",
-        games: "🔥 Топ Игры", reviews: "💬 Отзывы", video: "Видео Гайд", download: "Скачать APK",
+        games: "🔥 Топ Игры", reviews: "💬 Отзывы", video: "Видео Гайд + ваучеры", download: "Скачать APK",
         vpn_title: "Доступ ограничен", vpn_text: "Ваш регион ограничен. Включите **VPN**, чтобы продолжить регистрацию и получить бонус.",
         vpn_btn: "Я включил VPN / Начать играть", vpn_close_simple: "Закрыть", 
         bonus_label: "Бонус истекает:", promo_label: "Промокод:",
@@ -366,11 +362,42 @@ const content = {
             "Я сомневался, но выигрыши оказались просто огромными! {game} сегодня дает. Вывел все за 5 минут.",
             "Легко играть, легко выигрывать. Сорвал куш на {game}, и вывод прошел супер гладко."
         ]
+    },
+    fr: {
+        T2_3_hero: "Jouez et <span>Gagnez Quotidiennement</span>", T2_3_sub: "Retrait instantané.",
+        T1_FUN_hero: "Amusez-vous et <br><span>Profitez de votre temps libre</span>", T1_FUN_sub: "Divertissement haut de gamme. Sûr et sécurisé.",
+        
+        btn: "INSCRIPTION", vpn_cta: "⚠️ VPN REQUIS",
+        games: "🔥 Jeux Populaires", reviews: "💬 Avis des Joueurs", video: "Guide Vidéo + bons gratuits", download: "APK Android",
+        vpn_title: "Accès Restreint", vpn_text: "Votre région est actuellement restreinte.<br>Veuillez activer le **VPN** pour continuer l'inscription et réclamer votre bonus.",
+        vpn_btn: "J'ai activé le VPN / Commencer à jouer", vpn_close_simple: "Fermer", 
+        bonus_label: "Le bonus expire dans:", promo_label: "Code Promo:",
+        payment_label: "Méthodes de paiement disponibles:", 
+        responsible_text: "Jouez de manière responsable. Le jeu peut créer une dépendance.", 
+        crypto: "Crypto (USDT)", 
+        review_names: ["Jean D.", "Michel T.", "Sophie L.", "Adrien F.", "Chloé B.", "Julien G.", "Émilie R."],
+        review_templates: [
+            "Jeu génial ! J'adore et je gagne constamment de grosses sommes sur {game}. Le paiement a été instantané.",
+            "Classe ! J'ai reçu mon argent tout de suite. Je recommande vivement {game} si vous voulez multiplier votre dépôt.",
+            "Meilleures cotes et retrait rapide sur mon compte mobile money. Je viens de gagner une énorme somme en jouant à {game} !",
+            "J'étais sceptique, mais les gains étaient massifs ! {game} paie aujourd'hui. J'ai tout retiré en 5 minutes.",
+            "Facile à jouer, facile à gagner. J'ai décroché le jackpot sur {game} et le retrait s'est déroulé très facilement."
+        ]
     }
 };
 
 function localize(langCode, currencyCode, tier, countryCode) {
-    let lang = langCode.startsWith('ru') ? 'ru' : (langCode.startsWith('bn') ? 'bn' : 'en');
+    let lang;
+    if (langCode.startsWith('ru')) {
+        lang = 'ru';
+    } else if (langCode.startsWith('bn')) {
+        lang = 'bn';
+    } else if (langCode.startsWith('fr')) {
+        lang = 'fr';
+    } else {
+        lang = 'en';
+    }
+    
     const txt = content[lang];
     const rate = getCurrencyRate(currencyCode);
 
@@ -423,10 +450,12 @@ function localize(langCode, currencyCode, tier, countryCode) {
     }
 
     let namesSource = txt.review_names; 
-    if (currencyCode === 'RUB' && content['ru']) {
+    if (lang === 'ru' && content['ru']) {
         namesSource = content['ru'].review_names; 
+    } else if (lang === 'fr' && content['fr']) {
+        namesSource = content['fr'].review_names; 
     }
-
+    
     const availableNames = [...namesSource]; 
     const availableTemplates = [...txt.review_templates];
     
