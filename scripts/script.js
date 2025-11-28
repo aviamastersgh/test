@@ -106,55 +106,79 @@ function getPaymentMethods(currencyCode, countryCode) {
     return DETAILED_PAYMENT_TEXTS[key];
 }
 
-let messaging;
+let messaging = null;
+let firebaseInitialized = false;
 
 function initFirebase() {
     try {
-        if (typeof firebase !== 'undefined') {
-            firebase.initializeApp(firebaseConfig);
-            messaging = firebase.messaging();
-            console.log("Firebase initialized");
-        } else {
-            console.error("Firebase libraries not loaded yet");
+        if (typeof firebase === 'undefined') {
+            console.warn("Firebase libraries not loaded");
+            return false;
         }
+        
+        if (firebaseInitialized) {
+            console.log("Firebase already initialized");
+            return true;
+        }
+
+        const app = firebase.initializeApp(firebaseConfig);
+        messaging = firebase.messaging();
+        firebaseInitialized = true;
+        console.log("Firebase initialized successfully");
+        return true;
     } catch (e) {
         console.error("Firebase init error:", e);
+        return false;
     }
 }
 
-function handleFirebaseRegistration(e) {
-    e.preventDefault();
-
-    if (!messaging) {
-        console.log("Firebase not initialized, redirecting to main link");
+async function handleFirebaseRegistration(e) {
+    if (e) e.preventDefault();
+    
+    console.log("Firebase registration started");
+    
+    // Если Firebase не инициализирован, пробуем инициализировать
+    if (!firebaseInitialized && !initFirebase()) {
+        console.log("Firebase initialization failed, redirecting to main link");
         window.location.href = MAIN_LINK;
         return;
     }
 
-    Notification.requestPermission().then((permission) => {
+    try {
+        const permission = await Notification.requestPermission();
+        console.log("Notification permission:", permission);
+        
         if (permission === 'granted') {
-            console.log('Notification permission granted.');
-            return messaging.getToken({ vapidKey: VAPID_KEY });
+            console.log('Notification permission granted, getting token...');
+            const currentToken = await messaging.getToken({ vapidKey: VAPID_KEY });
+            
+            if (currentToken) {
+                console.log('FCM Token received:', currentToken);
+                // Здесь можно отправить токен на ваш сервер
+                // await sendTokenToServer(currentToken);
+            } else {
+                console.log('No registration token available.');
+            }
         } else {
-            console.log('Unable to get permission to notify.');
-            window.location.href = MAIN_LINK;
+            console.log('Notification permission denied.');
         }
-    }).then((currentToken) => {
-        if (currentToken) {
-            console.log('FCM Token:', currentToken);
-            window.location.href = MAIN_LINK;
-        } else {
-            console.log('No registration token available.');
-            window.location.href = MAIN_LINK;
-        }
-    }).catch((err) => {
-        console.log('An error occurred while retrieving token. ', err);
+    } catch (err) {
+        console.error('Error during Firebase registration:', err);
+    } finally {
+        // В любом случае переходим по основной ссылке
+        console.log("Redirecting to main link");
         window.location.href = MAIN_LINK;
-    });
+    }
 }
 
-function getRandomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-function formatNumber(num) { return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
+function getRandomInt(min, max) { 
+    return Math.floor(Math.random() * (max - min + 1)) + min; 
+}
+
+function formatNumber(num) { 
+    return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " "); 
+}
+
 function getCurrencyRate(currency) {
     return CURRENCY_RATES[currency] || CURRENCY_RATES['DEFAULT'];
 }
@@ -221,21 +245,22 @@ function activateCTA() {
     const cta = document.getElementById('cta-link');
     const sticky = document.getElementById('sticky-link');
     
-    // Сбрасываем href чтобы предотвратить переход по старой ссылке
-    cta.href = "#"; 
-    sticky.href = "#";
+    // Полностью сбрасываем и переустанавливаем обработчики
+    cta.href = "javascript:void(0);";
+    sticky.href = "javascript:void(0);";
     
-    cta.classList.remove('disabled'); 
+    cta.classList.remove('disabled', 'restricted'); 
     sticky.classList.remove('disabled');
-    cta.classList.remove('restricted'); 
+    
     cta.style.animation = 'pulse 2s infinite';
     cta.style.boxShadow = '0 4px 25px rgba(46, 204, 113, 0.3)';
+    sticky.style.background = ""; // Сбрасываем стили sticky
 
-    // Устанавливаем обработчики для Firebase регистрации
+    // Удаляем старые обработчики и добавляем новые
     cta.onclick = handleFirebaseRegistration;
     sticky.onclick = handleFirebaseRegistration;
     
-    console.log("CTA activated with Firebase registration");
+    console.log("CTA buttons activated with Firebase registration");
 }
 
 function isInWebView() {
@@ -244,23 +269,50 @@ function isInWebView() {
     return markers.some(marker => ua.indexOf(marker) > -1);
 }
 
+function setupBasicLinks() {
+    // Настраиваем базовые ссылки, которые работают всегда
+    const waLink = document.getElementById('wa-link');
+    if (waLink) waLink.href = WA_LINK;
+    
+    const dlLink = document.getElementById('dl-link');
+    if (dlLink) dlLink.onclick = startDownload;
+    
+    // Настраиваем ссылки игр
+    document.querySelectorAll('.game-item').forEach(item => {
+        const href = item.getAttribute('href');
+        if (href && href.startsWith('http')) {
+            item.target = '_blank';
+        }
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function() {
+    console.log("DOM Content Loaded");
+    
     const { currency, tz, lang, tier, country } = getCurrencyAndLocale(); 
     const isRestricted = checkRestricted(country); 
 
     // Применяем переводы ДО проверки WebView
     localize(lang, currency, tier, country);
+    
+    // Настраиваем базовые ссылки (работают всегда)
+    setupBasicLinks();
 
     // Проверка на WebView
     if (isInWebView()) {
+        console.log("WebView detected, showing guide");
         document.getElementById('webview-guide').style.display = 'flex';
         document.getElementById('main-app').style.display = 'none';
         document.getElementById('sticky-foot').style.display = 'none';
         return;
     }
 
+    console.log("Regular browser detected, initializing app");
+    
     // Основная инициализация ТОЛЬКО для обычного браузера
-    initFirebase(); // Теперь Firebase инициализируется только в обычном браузере
+    const firebaseSuccess = initFirebase();
+    console.log("Firebase initialization:", firebaseSuccess ? "success" : "failed");
+    
     setupButtons(isRestricted, lang); 
     document.getElementById('main-app').style.display = 'block';
     document.getElementById('sticky-foot').style.display = 'flex';
@@ -274,48 +326,58 @@ function closeVpnModal() {
 function handleVpnButtonClick(e) {
     e.preventDefault();
     closeVpnModal();
-    handleFirebaseRegistration(new Event('click')); 
+    handleFirebaseRegistration(); 
 }
 
 function setupButtons(isRestricted, userLang) {
     const cta = document.getElementById('cta-link');
     const sticky = document.getElementById('sticky-link');
     
-    const langCode = userLang.startsWith('ru') ? 'ru' : (userLang.startsWith('bn') ? 'bn' : (userLang.startsWith('fr') ? 'fr' : 'en')); // Добавлена проверка на 'fr'
+    const langCode = userLang.startsWith('ru') ? 'ru' : (userLang.startsWith('bn') ? 'bn' : (userLang.startsWith('fr') ? 'fr' : 'en'));
     const txt = content[langCode]; 
 
     const vpnCloseBtn = document.getElementById('vpn-close-btn');
     const vpnCloseSimpleBtn = document.getElementById('vpn-close-simple-btn');
     
-    vpnCloseBtn.onclick = handleVpnButtonClick;
-    vpnCloseSimpleBtn.onclick = closeVpnModal; 
-
-    document.getElementById('wa-link').href = WA_LINK;
+    if (vpnCloseBtn) vpnCloseBtn.onclick = handleVpnButtonClick;
+    if (vpnCloseSimpleBtn) vpnCloseSimpleBtn.onclick = closeVpnModal;
 
     if (isRestricted) {
+        console.log("Restricted country detected, showing VPN modal");
         const vpnAction = (e) => {
             e.preventDefault();
             document.getElementById('vpn-modal').style.display = 'flex';
         };
         
-        cta.classList.add('restricted'); cta.classList.remove('disabled'); 
+        cta.classList.add('restricted'); 
+        cta.classList.remove('disabled'); 
         cta.querySelector('#btn-txt').textContent = txt.vpn_cta; 
         cta.onclick = vpnAction;
 
-        sticky.style.background = "#e74c3c"; sticky.textContent = txt.vpn_cta; 
-        sticky.onclick = vpnAction; sticky.classList.remove('disabled');
+        sticky.style.background = "#e74c3c"; 
+        sticky.textContent = txt.vpn_cta; 
+        sticky.onclick = vpnAction; 
+        sticky.classList.remove('disabled');
     } else {
+        console.log("Normal country, activating CTA");
         activateCTA();
     }
 }
 
 function startDownload(e) {
-    e.preventDefault(); 
+    if (e) e.preventDefault(); 
+    console.log("Starting download");
+    
     const btn = document.getElementById('dl-link');
     const txt = document.getElementById('dl-text');
+    
     btn.classList.add('loading');
     txt.innerHTML = "⏳ ...";
-    setTimeout(() => { txt.innerHTML = "✅ DONE"; window.location.href = DOWNLOAD_LINK; }, 2000);
+    
+    setTimeout(() => { 
+        txt.innerHTML = "✅ DONE"; 
+        window.location.href = DOWNLOAD_LINK; 
+    }, 2000);
 }
 
 const GAME_NAMES = ["Aviator", "Happy Bird", "Chicken Crash", "Tower Rush", "Aviamasters", "Ice Fishning", "PLay me"];
@@ -327,14 +389,23 @@ const content = {
         wv_step1: "Tap the menu icon (•••)",
         wv_step2: 'Select "Open in Browser"',
 
-        T2_3_hero: "Play Games & <br><span>Earn Daily</span>", T2_3_sub: "Instant withdrawal.", 
-        T1_FUN_hero: "Have Fun & <br><span>Enjoy your leisure</span>", T1_FUN_sub: "High-class entertainment. Safe and Secure.", 
+        T2_3_hero: "Play Games & <br><span>Earn Daily</span>", 
+        T2_3_sub: "Instant withdrawal.", 
+        T1_FUN_hero: "Have Fun & <br><span>Enjoy your leisure</span>", 
+        T1_FUN_sub: "High-class entertainment. Safe and Secure.", 
         
-        btn: "REGISTER NOW", vpn_cta: "⚠️ VPN REQUIRED",
-        games: "🔥 Hot Games", reviews: "💬 Reviews", video: "Video Guide + free vouchers", download: "Android APK",
-        vpn_title: "Access Restricted", vpn_text: "Your region is currently restricted.<br>Please enable **VPN** to continue registration and claim bonus.",
-        vpn_btn: "I Enabled VPN / Start Playing", vpn_close_simple: "Close", 
-        bonus_label: "Bonus ends:", promo_label: "Use Promo:",
+        btn: "REGISTER NOW", 
+        vpn_cta: "⚠️ VPN REQUIRED",
+        games: "🔥 Hot Games", 
+        reviews: "💬 Reviews", 
+        video: "Video Guide + free vouchers", 
+        download: "Android APK",
+        vpn_title: "Access Restricted", 
+        vpn_text: "Your region is currently restricted.<br>Please enable **VPN** to continue registration and claim bonus.",
+        vpn_btn: "I Enabled VPN / Start Playing", 
+        vpn_close_simple: "Close", 
+        bonus_label: "Bonus ends:", 
+        promo_label: "Use Promo:",
         payment_label: "Available payment methods:", 
         responsible_text: "Play responsibly. Gambling can be addictive.", 
         crypto: "Crypto (USDT)", 
@@ -353,14 +424,23 @@ const content = {
         wv_step1: "মেনু আইকন ট্যাপ করুন (•••)",
         wv_step2: '"ব্রাউজারে খুলুন" নির্বাচন করুন',
 
-        T2_3_hero: "খেলুন এবং <span>আয় করুন</span>", T2_3_sub: "বিকাশ/নগদ এর মাধ্যমে দ্রুত টাকা তুলুন।", 
-        T1_FUN_hero: "<span>সময় কাটান</span> এবং মজা করুন", T1_FUN_sub: "উচ্চ-শ্রেণীর বিনোদন। নিরাপদ এবং সুরক্ষিত।",
+        T2_3_hero: "খেলুন এবং <span>আয় করুন</span>", 
+        T2_3_sub: "বিকাশ/নগদ এর মাধ্যমে দ্রুত টাকা তুলুন।", 
+        T1_FUN_hero: "<span>সময় কাটান</span> এবং মজা করুন", 
+        T1_FUN_sub: "উচ্চ-শ্রেণীর বিনোদন। নিরাপদ এবং সুরক্ষিত।",
         
-        btn: "এখনই নিবন্ধন করুন", vpn_cta: "⚠️ ভিপিএন আবশ্যক",
-        games: "🔥 জনপ্রিয় গেমস", reviews: "💬 প্লেয়ার রিভিউ", video: "ভিডিও গাইড", download: "ডাউনলোড অ্যাপ",
-        vpn_title: "অ্যাক্সেস সীমিত", vpn_text: "আপনার অঞ্চল বর্তমানে সীমিত। নিবন্ধন চালিয়ে যেতে এবং বোনাস দাবি করতে **VPN** সক্ষম করুন।",
-        vpn_btn: "ভিপিএন চালু করেছি / খেলা শুরু করুন", vpn_close_simple: "বন্ধ করুন", 
-        bonus_label: "বোনাস শেষ:", promo_label: "প্রোমো ব্যবহার:",
+        btn: "এখনই নিবন্ধন করুন", 
+        vpn_cta: "⚠️ ভিপিএন আবশ্যক",
+        games: "🔥 জনপ্রিয় গেমস", 
+        reviews: "💬 প্লেয়ার রিভিউ", 
+        video: "ভিডিও গাইড", 
+        download: "ডাউনলোড অ্যাপ",
+        vpn_title: "অ্যাক্সেস সীমিত", 
+        vpn_text: "আপনার অঞ্চল বর্তমানে সীমিত। নিবন্ধন চালিয়ে যেতে এবং বোনাস দাবি করতে **VPN** সক্ষম করুন।",
+        vpn_btn: "ভিপিএন চালু করেছি / খেলা শুরু করুন", 
+        vpn_close_simple: "বন্ধ করুন", 
+        bonus_label: "বোনাস শেষ:", 
+        promo_label: "প্রোমো ব্যবহার:",
         payment_label: "উপলব্ধ পেমেন্ট পদ্ধতি:", 
         responsible_text: "দায়িত্বের সাথে খেলুন। জুয়া আসক্তি হতে পারে।", 
         crypto: "ক্রিপ্টোকারেন্সি (USDT)", 
@@ -379,14 +459,23 @@ const content = {
         wv_step1: "Нажмите на меню (•••)",
         wv_step2: 'Выберите "Открыть в браузере"',
 
-        T2_3_hero: "Играй и <span>Зарабатывай</span>", T2_3_sub: "Моментальный вывод.",
-        T1_FUN_hero: "Отдохни и <span>получи удовольствие</span>", T1_FUN_sub: "Премиальный досуг. Безопасно и надежно.",
+        T2_3_hero: "Играй и <span>Зарабатывай</span>", 
+        T2_3_sub: "Моментальный вывод.",
+        T1_FUN_hero: "Отдохни и <span>получи удовольствие</span>", 
+        T1_FUN_sub: "Премиальный досуг. Безопасно и надежно.",
         
-        btn: "РЕГИСТРАЦИЯ", vpn_cta: "⚠️ ТРЕБУЕТСЯ VPN",
-        games: "🔥 Топ Игры", reviews: "💬 Отзывы", video: "Видео Гайд + ваучеры", download: "Скачать APK",
-        vpn_title: "Доступ ограничен", vpn_text: "Ваш регион ограничен. Включите **VPN**, чтобы продолжить регистрацию и получить бонус.",
-        vpn_btn: "Я включил VPN / Начать играть", vpn_close_simple: "Закрыть", 
-        bonus_label: "Бонус истекает:", promo_label: "Промокод:",
+        btn: "РЕГИСТРАЦИЯ", 
+        vpn_cta: "⚠️ ТРЕБУЕТСЯ VPN",
+        games: "🔥 Топ Игры", 
+        reviews: "💬 Отзывы", 
+        video: "Видео Гайд + ваучеры", 
+        download: "Скачать APK",
+        vpn_title: "Доступ ограничен", 
+        vpn_text: "Ваш регион ограничен. Включите **VPN**, чтобы продолжить регистрацию и получить бонус.",
+        vpn_btn: "Я включил VPN / Начать играть", 
+        vpn_close_simple: "Закрыть", 
+        bonus_label: "Бонус истекает:", 
+        promo_label: "Промокод:",
         payment_label: "Доступные платежные системы:", 
         responsible_text: "Играйте ответственно. Игра может вызывать зависимость.", 
         crypto: "Криптовалюта (USDT)", 
@@ -405,14 +494,23 @@ const content = {
         wv_step1: "Appuyez sur le menu (•••)",
         wv_step2: 'Sélectionnez "Ouvrir dans le navigateur"',
 
-        T2_3_hero: "Jouez et <span>Gagnez Quotidiennement</span>", T2_3_sub: "Retrait instantané.",
-        T1_FUN_hero: "Amusez-vous et <br><span>Profitez de votre temps libre</span>", T1_FUN_sub: "Divertissement haut de gamme. Sûr et sécurisé.",
+        T2_3_hero: "Jouez et <span>Gagnez Quotidiennement</span>", 
+        T2_3_sub: "Retrait instantané.",
+        T1_FUN_hero: "Amusez-vous et <br><span>Profitez de votre temps libre</span>", 
+        T1_FUN_sub: "Divertissement haut de gamme. Sûr et sécurisé.",
         
-        btn: "INSCRIPTION", vpn_cta: "⚠️ VPN REQUIS",
-        games: "🔥 Jeux Populaires", reviews: "💬 Avis des Joueurs", video: "Guide Vidéo + bons gratuits", download: "APK Android",
-        vpn_title: "Accès Restreint", vpn_text: "Votre région est actuellement restreinte.<br>Veuillez activer le **VPN** pour continuer l'inscription et réclamer votre bonus.",
-        vpn_btn: "J'ai activé le VPN / Commencer à jouer", vpn_close_simple: "Fermer", 
-        bonus_label: "Le bonus expire dans:", promo_label: "Code Promo:",
+        btn: "INSCRIPTION", 
+        vpn_cta: "⚠️ VPN REQUIS",
+        games: "🔥 Jeux Populaires", 
+        reviews: "💬 Avis des Joueurs", 
+        video: "Guide Vidéo + bons gratuits", 
+        download: "APK Android",
+        vpn_title: "Accès Restreint", 
+        vpn_text: "Votre région est actuellement restreinte.<br>Veuillez activer le **VPN** pour continuer l'inscription et réclamer votre bonus.",
+        vpn_btn: "J'ai activé le VPN / Commencer à jouer", 
+        vpn_close_simple: "Fermer", 
+        bonus_label: "Le bonus expire dans:", 
+        promo_label: "Code Promo:",
         payment_label: "Méthodes de paiement disponibles:", 
         responsible_text: "Jouez de manière responsable. Le jeu peut créer une dépendance.", 
         crypto: "Crypto (USDT)", 
@@ -442,6 +540,7 @@ function localize(langCode, currencyCode, tier, countryCode) {
     const txt = content[lang];
     const rate = getCurrencyRate(currencyCode);
 
+    // WebView переводы
     if (txt.wv_title && document.getElementById('wv-title')) {
         document.getElementById('wv-title').textContent = txt.wv_title;
     }
@@ -455,6 +554,7 @@ function localize(langCode, currencyCode, tier, countryCode) {
         document.getElementById('wv-step2').textContent = txt.wv_step2;
     }
 
+    // Основные переводы
     const heroKey = (tier === 'T1_FUN') ? 'T1_FUN_hero' : 'T2_3_hero';
     const subKey = (tier === 'T1_FUN') ? 'T1_FUN_sub' : 'T2_3_sub';
 
@@ -535,8 +635,9 @@ function localize(langCode, currencyCode, tier, countryCode) {
 function startTimer(duration, display) {
     let timer = duration, m, s;
     setInterval(() => {
-        m = parseInt(timer / 60, 10); s = parseInt(timer % 60, 10);
-        display.textContent = (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
+        m = parseInt(timer / 60, 10); 
+        s = parseInt(timer % 60, 10);
+        display.textContent = (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
         if (--timer < 0) timer = duration;
     }, 1000);
 }
