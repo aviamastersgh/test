@@ -1,5 +1,5 @@
 const MAIN_LINK="https://1wgcmt.com/v3/3245/landing-universal-timer?p=6i9o";
-const WA_LINK="https://whatsapp.com/channel/0029Vb6IjfI4tRrn1IzWzP16/298";
+const WA_LINK="https://t.me/aviamastersxmas/3";
 const DOWNLOAD_LINK="./files/KofiGames.apk";
 const FIREBASE_CONFIG={
     apiKey:"AIzaSyBfeysFOWSEkKD7GKaCveUCbhGXow6UUPU",
