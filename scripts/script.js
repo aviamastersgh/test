@@ -15,7 +15,7 @@ const CRYPTO_KEY="CRYPTO_PLACEHOLDER";
 const CURRENCY_RATES={
     'USD':1,'EUR':.95,'BDT':110,'NGN':750,'KES':145,'ZAR':18,'GHS':12,'XAF':600,'XOF':600,'RWF':1300,'BRL':5,'RUB':90,'MXN':17,'IDR':15000,'PHP':55,'ARS':850,'CLP':900,'COP':3900,'PEN':3.7,'INR':83,'TRY':32,'UAH':40,'AZN':1.7,'AMD':400,'MDL':18,'TJS':11,'UZS':12500,'PKR':278,'MYR':4.7,'THB':36,'KRW':1350,'KGS':89,'EGP':30,'TZS':2500,'UGX':3700,'DEFAULT':100
 };
-const RESTRICTED_COUNTRIES=["Austria","Belgium","France","Germany","Ireland","Italy","Netherlands","Spain","Finland","Slovakia","Slovenia","Latvia","Luxembourg","United Kingdom","United States","Canada","Norway","Sweden","Japan"];
+const RESTRICTED_COUNTRIES=["Austria","Belgium","France","Germany","Ireland","Italy","Netherlands","Spain","Finland","Slovakia","Slovenia","Latvia","Luxembourg","United Kingdom","United States","Norway","Sweden","Japan"];
 const DETAILED_PAYMENT_TEXTS={
     'RUB':['СБП (T-банк, Сбер)','Т-pay','Piastrix','FK Wallet','Sky Pay (Visa/MasterCard/МИР)','Telegram stars',CRYPTO_KEY],
     'AZN':['M10','eManat','(Visa/MasterCard)','Kapital Bank','SmartPay','Skrill',CRYPTO_KEY],'AMD':['(Visa/MasterCard)','Skrill',CRYPTO_KEY],
@@ -34,14 +34,13 @@ const DETAILED_PAYMENT_TEXTS={
     'BEN':['MTN','Moov Money','Celtiis',CRYPTO_KEY],'TGO':['T-money','Moov Money',CRYPTO_KEY],'EGP':['Vodafone Cash','Etisalat/Orange Cash','Fawry','CIB Smart Wallet',CRYPTO_KEY],
     'TZS':['TigoPesa','Vodacom','Airtel',CRYPTO_KEY],'RWF':['MTN','Airtel','(Visa/MasterCard)',CRYPTO_KEY],'UGX':['MTN','Airtel',CRYPTO_KEY],'DEFAULT':['Visa/MasterCard',CRYPTO_KEY,'Bank Transfer']
 };
-const GAME_NAMES=["Aviator","Happy Bird","Chicken Crash","Tower Rush","Aviamasters","Ice Fishning","PLay me"];
+const GAME_NAMES=["Aviator","Aviamasters Xmas","Chicken Crash","Tower Rush","Aviamasters","Ice Fishning","Play me"];
 const CONTENT={
     en:{wv_title:"Browser Required",wv_sub:"To continue, please switch browser.",wv_step1:"Tap the menu icon (•••)",wv_step2:'Select "Open in Browser"',T2_3_hero:"Play Games & <br><span>Earn Daily</span>",T2_3_sub:"Instant withdrawal.",T1_FUN_hero:"Have Fun & <br><span>Enjoy your leisure</span>",T1_FUN_sub:"High-class entertainment. Safe and Secure.",btn:"REGISTER NOW",vpn_cta:"⚠️ VPN REQUIRED",games:"🔥 Hot Games",reviews:"💬 Reviews",video:"Video Guide + free vouchers",download:"Android APK",vpn_title:"Access Restricted",vpn_text:"Your region is currently restricted.<br>Please enable **VPN** to continue registration and claim bonus.",vpn_btn:"I Enabled VPN / Start Playing",vpn_close_simple:"Close",bonus_label:"Bonus ends:",promo_label:"Use Promo:",payment_label:"Available payment methods:",responsible_text:"Play responsibly. Gambling can be addictive.",crypto:"Crypto (USDT)",review_names:["John D.","Mike T.","Sarah L.","Adam F.","Chloe B.","James G.","Emily R."],review_templates:["Awesome game! I love it and constantly win big amounts in {game}. Payout was instant.","Classy! Got my money right away. Highly recommend {game} if you want to multiply your deposit.","Best odds and fast payout to my mobile money account. I just won a huge sum playing {game}!","I was skeptical, but the winnings were massive! {game} is paying today. Withdrawed everything in 5 minutes.","Easy to play, easy to win. I hit the jackpot on {game} and the withdrawal was super smooth."]},
     bn:{wv_title:"ব্রাউজার প্রয়োজন",wv_sub:"চালিয়ে যেতে, দয়া করে ব্রাউজার পরিবর্তন করুন।",wv_step1:"মেনু আইকন ট্যাপ করুন (•••)",wv_step2:'"ব্রাউজারে খুলুন" নির্বাচন করুন',T2_3_hero:"খেলুন এবং <span>আয় করুন</span>",T2_3_sub:"বিকাশ/নগদ এর মাধ্যমে দ্রুত টাকা তুলুন।",T1_FUN_hero:"<span>সময় কাটান</span> এবং মজা করুন",T1_FUN_sub:"উচ্চ-শ্রেণীর বিনোদন। নিরাপদ এবং সুরক্ষিত।",btn:"এখনই নিবন্ধন করুন",vpn_cta:"⚠️ ভিপিএন আবশ্যক",games:"🔥 জনপ্রিয় গেমস",reviews:"💬 প্লেয়ার রিভিউ",video:"ভিডিও গাইড",download:"ডাউনলোড অ্যাপ",vpn_title:"অ্যাক্সেস সীমিত",vpn_text:"আপনার অঞ্চল বর্তমানে সীমিত। নিবন্ধন চালিয়ে যেতে এবং বোনাস দাবি করতে **VPN** সক্ষম করুন।",vpn_btn:"ভিপিএন চালু করেছি / খেলা শুরু করুন",vpn_close_simple:"বন্ধ করুন",bonus_label:"বোনাস শেষ:",promo_label:"প্রোমো ব্যবহার:",payment_label:"উপলব্ধ পেমেন্ট পদ্ধতি:",responsible_text:"দায়িত্বের সাথে খেলুন। জুয়া আসক্তি হতে পারে।",crypto:"ক্রিপ্টোকারেন্সি (USDT)",review_names:["Rahim K.","Sumon A.","Fatima B.","Omar H.","Priya C.","Akash V."],review_templates:["খুব ভালো অ্যাপ! আমি এটি পছন্দ করি এবং {game}-এ ক্রমাগত বড় অঙ্কের টাকা জিতছি। পেমেন্ট তাৎক্ষণিক ছিল।","দারুণ! আমি সঙ্গে সঙ্গে আমার টাকা পেয়েছি। আপনি যদি আপনার ডিপোজিট বাড়াতে চান তবে আমি {game} এর সুপারিশ করছি।","সেরা অডস এবং মোবাইল মানিতে দ্রুত পেমেন্ট। আমি এইমাত্র {game} খেলে একটি বিশাল অঙ্ক জিতেছি!","আমি সন্দিহান ছিলাম, কিন্তু জয়গুলো ছিল বিশাল! আজ {game} পেমেন্ট দিচ্ছে। ৫ মিনিটের মধ্যে সব তুলে নিলাম।","খেলা সহজ, জেতা সহজ। আমি {game}-এ জ্যাকপট পেয়েছি এবং টাকা তোলা খুব মসৃণ ছিল।"]},
     ru:{wv_title:"Нужен Браузер",wv_sub:"Для продолжения откройте в браузере.",wv_step1:"Нажмите на меню (•••)",wv_step2:'Выберите "Открыть в браузере"',T2_3_hero:"Играй и <span>Зарабатывай</span>",T2_3_sub:"Моментальный вывод.",T1_FUN_hero:"Отдохни и <span>получи удовольствие</span>",T1_FUN_sub:"Премиальный досуг. Безопасно и надежно.",btn:"РЕГИСТРАЦИЯ",vpn_cta:"⚠️ ТРЕБУЕТСЯ VPN",games:"🔥 Топ Игры",reviews:"💬 Отзывы",video:"Видео Гайд + ваучеры",download:"Скачать APK",vpn_title:"Доступ ограничен",vpn_text:"Ваш регион ограничен. Включите **VPN**, чтобы продолжить регистрацию и получить бонус.",vpn_btn:"Я включил VPN / Начать играть",vpn_close_simple:"Закрыть",bonus_label:"Бонус истекает:",promo_label:"Промокод:",payment_label:"Доступные платежные системы:",responsible_text:"Играйте ответственно. Игра может вызывать зависимость.",crypto:"Криптовалюта (USDT)",review_names:["Иван С.","Ольга К.","Дмитрий В.","Елена П.","Сергей М.","Анна Н.","Михаил В."],review_templates:["Отличная игра! Люблю ее, постоянно выигрываю крупные суммы в {game}. Вывод моментальный.","Класс! Деньги пришли сразу. Очень советую {game}, если хотите умножить свой депозит.","Лучшие коэффициенты и быстрый вывод на карту. Я только что выиграл огромную сумму в {game}!","Я сомневался, но выигрыши оказались просто огромными! {game} сегодня дает. Вывел все за 5 минут.","Легко играть, легко выигрывать. Сорвал куш на {game}, и вывод прошел супер гладко."]},
     fr:{wv_title:"Navigateur Requis",wv_sub:"Pour continuer, veuillez changer de navigateur.",wv_step1:"Appuyez sur le menu (•••)",wv_step2:'Sélectionnez "Ouvrir dans le navigateur"',T2_3_hero:"Jouez et <span>Gagnez Quotidiennement</span>",T2_3_sub:"Retrait instantané.",T1_FUN_hero:"Amusez-vous et <br><span>Profitez de votre temps libre</span>",T1_FUN_sub:"Divertissement haut de gamme. Sûr et sécurisé.",btn:"INSCRIPTION",vpn_cta:"⚠️ VPN REQUIS",games:"🔥 Jeux Populaires",reviews:"💬 Avis des Joueurs",video:"Guide Vidéo + bons gratuits",download:"APK Android",vpn_title:"Accès Restreint",vpn_text:"Votre région est actuellement restreinte.<br>Veuillez activer le **VPN** pour continuer l'inscription et réclamer votre bonus.",vpn_btn:"J'ai activé le VPN / Commencer à jouer",vpn_close_simple:"Fermer",bonus_label:"Le bonus expire dans:",promo_label:"Code Promo:",payment_label:"Méthodes de paiement disponibles:",responsible_text:"Jouez de manière responsable. Le jeu peut créer une dépendance.",crypto:"Crypto (USDT)",review_names:["Jean D.","Michel T.","Sophie L.","Adrien F.","Chloé B.","Julien G.","Émilie R."],review_templates:["Jeu génial ! J'adore et je gagne constamment de grosses sommes sur {game}. Le paiement a été instantané.","Classe ! J'ai reçu mon argent tout de suite. Je recommande vivement {game} si vous voulez multiplier votre dépôt.","Meilleures cotes et retrait rapide sur mon compte mobile money. Je viens de gagner une énorme somme en jouant à {game} !","J'étais sceptique, mais les gains étaient massifs ! {game} paie aujourd'hui. J'ai tout retiré en 5 minutes.","Facile à jouer, facile à gagner. J'ai décroché le jackpot sur {game} et le retrait s'est déroulé très facilement."]}
 };
-
 function getPaymentMethods(currencyCode, countryCode){
     let key=currencyCode;
     if(countryCode==='Venezuela')key='USD_VEN';
@@ -56,9 +55,7 @@ function getPaymentMethods(currencyCode, countryCode){
     else if(!DETAILED_PAYMENT_TEXTS[key])key='DEFAULT';
     return DETAILED_PAYMENT_TEXTS[key];
 }
-
 let messaging=null,firebaseInitialized=false;
-
 function initFirebase(){
     try{
         if(typeof firebase==='undefined'){
@@ -79,7 +76,6 @@ function initFirebase(){
         return false;
     }
 }
-
 async function handleFirebaseRegistration(e){
     if(e)e.preventDefault();
     console.log("Firebase registration started");
@@ -109,11 +105,9 @@ async function handleFirebaseRegistration(e){
         window.location.href=MAIN_LINK;
     }
 }
-
 const getRandomInt=(min,max)=>Math.floor(Math.random()*(max-min+1))+min;
 const formatNumber=num=>Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g," ");
 const getCurrencyRate=currency=>CURRENCY_RATES[currency]||CURRENCY_RATES['DEFAULT'];
-
 function getCurrencyAndLocale(){
     const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
     const lang=(navigator.language||navigator.userLanguage).toLowerCase();
@@ -135,21 +129,17 @@ function getCurrencyAndLocale(){
         "America/Chicago":"USD,United States","Europe/London":"EUR,United Kingdom",
         "Europe/Madrid":"EUR,Europe","Europe/Berlin":"EUR,Europe","Europe/Paris":"EUR,Europe","Europe/Amsterdam":"EUR,Europe"
     };
-    
     let mapEntry=Object.entries(TZ_MAP).find(([key])=>tz.includes(key));
     if(mapEntry){
         [currency,country]=mapEntry[1].split(',');
-    }
-    
+    }   
     let tier='T2_3';
     if(TIER1_FUN_COUNTRIES.some(c=>country.includes(c))||['Europe','Canada','United States'].includes(country)){
         tier='T1_FUN';
     }
     return {currency,tz,lang,tier,country,countryCode:country};
 }
-
 const checkRestricted=country=>RESTRICTED_COUNTRIES.includes(country);
-
 function activateCTA(){
     const cta=document.getElementById('cta-link');
     const sticky=document.getElementById('sticky-link');
@@ -162,13 +152,11 @@ function activateCTA(){
     cta.onclick=sticky.onclick=handleFirebaseRegistration;
     console.log("CTA buttons activated with Firebase registration");
 }
-
 function isInWebView(){
     const ua=navigator.userAgent||navigator.vendor||window.opera;
     const markers=['FBAN','FBAV','Instagram','TikTok','BytedanceWebview','wv'];
     return markers.some(marker=>ua.indexOf(marker)>-1);
 }
-
 function setupBasicLinks(){
     const waLink=document.getElementById('wa-link');
     if(waLink)waLink.href=WA_LINK;
@@ -179,7 +167,6 @@ function setupBasicLinks(){
         if(href&&href.startsWith('http'))item.target='_blank';
     });
 }
-
 document.addEventListener("DOMContentLoaded",function(){
     console.log("DOM Content Loaded");
     const {currency,lang,tier,country}=getCurrencyAndLocale();
@@ -201,17 +188,14 @@ document.addEventListener("DOMContentLoaded",function(){
     document.getElementById('sticky-foot').style.display='flex';
     startTimer(300,document.querySelector('#timer'));
 });
-
 function closeVpnModal(){
     document.getElementById('vpn-modal').style.display='none';
 }
-
 function handleVpnButtonClick(e){
     e.preventDefault();
     closeVpnModal();
     handleFirebaseRegistration();
 }
-
 function setupButtons(isRestricted,userLang){
     const cta=document.getElementById('cta-link');
     const sticky=document.getElementById('sticky-link');
@@ -240,7 +224,6 @@ function setupButtons(isRestricted,userLang){
         activateCTA();
     }
 }
-
 function startDownload(e){
     if(e)e.preventDefault();
     console.log("Starting download");
@@ -253,7 +236,6 @@ function startDownload(e){
         window.location.href=DOWNLOAD_LINK;
     },2000);
 }
-
 function localize(langCode,currencyCode,tier,countryCode){
     let lang;
     if(langCode.startsWith('ru'))lang='ru';
@@ -262,14 +244,10 @@ function localize(langCode,currencyCode,tier,countryCode){
     else lang='en';
     const txt=CONTENT[lang];
     const rate=getCurrencyRate(currencyCode);
-    
-    // WebView
     if(txt.wv_title)document.getElementById('wv-title').textContent=txt.wv_title;
     if(txt.wv_sub)document.getElementById('wv-sub').textContent=txt.wv_sub;
     if(txt.wv_step1)document.getElementById('wv-step1').textContent=txt.wv_step1;
     if(txt.wv_step2)document.getElementById('wv-step2').textContent=txt.wv_step2;
-    
-    // Основные
     const heroKey=(tier==='T1_FUN')?'T1_FUN_hero':'T2_3_hero';
     const subKey=(tier==='T1_FUN')?'T1_FUN_sub':'T2_3_sub';
     document.getElementById('hero-title').innerHTML=txt[heroKey];
@@ -290,14 +268,10 @@ function localize(langCode,currencyCode,tier,countryCode){
     document.getElementById('dl-text').textContent=txt.download;
     document.getElementById('payment-text').textContent=txt.payment_label;
     document.getElementById('responsible-text').textContent=txt.responsible_text;
-    
-    // Платежи
     const paymentMethodsContainer=document.getElementById('payment-methods-list');
     const paymentMethodsArray=getPaymentMethods(currencyCode,countryCode);
     const translatedPayments=paymentMethodsArray.map(item=>item===CRYPTO_KEY?txt.crypto:item).join('; ');
     paymentMethodsContainer.textContent=translatedPayments;
-    
-    // Бегущая строка
     const track=document.getElementById('wins-track');
     track.innerHTML='';
     for(let i=0;i<15;i++){
@@ -306,8 +280,6 @@ function localize(langCode,currencyCode,tier,countryCode){
         const randomGame=GAME_NAMES[getRandomInt(0,GAME_NAMES.length-1)];
         track.innerHTML+=`<span class="win-item">🎉 <span class="win-name">User***</span> <span class="win-amount">+${formatNumber(localAmount)} ${currencyCode}</span> <span class="win-game">${randomGame}</span></span>`;
     }
-    
-    // Отзывы
     const namesSource=CONTENT[lang].review_names;
     const availableNames=[...namesSource];
     const availableTemplates=[...txt.review_templates];
@@ -325,7 +297,6 @@ function localize(langCode,currencyCode,tier,countryCode){
         document.getElementById(`rev-txt-${i}`).innerHTML=`"${reviewText}"`;
     }
 }
-
 function startTimer(duration,display){
     let timer=duration,m,s;
     setInterval(()=>{
